@@ -1,0 +1,54 @@
+# Ruby
+# Package your Ruby project.
+# Add steps that install rails, analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/ruby
+variables:
+  azureSubscriptionEndpoint: opencell-lims-docker - Azure
+  azureContainerRegistry: opencelllimsdockeracr.azurecr.io
+  secretKey: $(secretKeyBase)
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: DockerCompose@0
+    displayName: Build Services
+    inputs:
+      action: Build services
+      azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
+      azureContainerRegistry: $(azureContainerRegistry)
+      dockerComposeFile: docker-compose.yml
+  - task: DockerCompose@0
+    displayName: Run tests
+    inputs:
+      action: Run a Docker Compose command
+      azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
+      azureContainerRegistry: $(azureContainerRegistry)
+      dockerComposeFile: docker-compose.yml 
+      projectName: $(Build.Repository.Name)
+      qualifyImageNames: true
+      dockerComposeCommand: run -e "RAILS_ENV=test" web bundle exec rake db:create db:migrate spec
+  - task: DockerCompose@0
+    displayName: Build Services
+    inputs:
+      action: Build services
+      azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
+      azureContainerRegistry: $(azureContainerRegistry)
+      additionalImageTags: $(Build.BuildId)
+      dockerComposeFile: docker-compose.prod.yml
+      dockerComposeFileArgs: |
+        SECRET_KEY=$(secretKey)
+  - task: DockerCompose@0
+    displayName: Push services
+    inputs:
+      action: Push services
+      azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
+      azureContainerRegistry: $(azureContainerRegistry)
+      dockerComposeFile: docker-compose.prod.yml
+      projectName: $(Build.Repository.Name)
+      qualifyImageNames: true
+      additionalImageTags: $(Build.BuildId)
+      
