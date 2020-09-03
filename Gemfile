@@ -32,13 +32,16 @@ gem 'jbuilder', '~> 2.5'
 
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
+gem "azure-storage-blob", require: false
 gem 'devise'
+gem 'barby'
+gem 'chunky_png'
 gem 'email_validator'
 gem 'pundit'
-gem 'rqrcode'
 gem 'jquery-ui-rails'
 gem "sentry-raven"
 gem "font-awesome-rails"
+gem 'newrelic_rpm'
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
 
@@ -79,4 +82,6 @@ group :test do
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+gem 'tzinfo-data'
+
+gem "clamby", "~> 1.6"
