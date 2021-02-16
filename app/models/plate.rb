@@ -13,15 +13,15 @@ end
 class HasOtherErrorsValidator < ActiveModel::Validator
 
   def validate(record)
-     if record.assign_error == true
-        record.errors[:wells] << "Illegal Well Reference"
-     end
+    if record.assign_error == true
+      record.errors[:wells] << 'Illegal Well Reference'
+    end
   end
 end
 
 class Plate < ApplicationRecord
 
-  extend QrModule
+  extend BarcodeModule
 
   has_many :wells, dependent: :destroy
   has_many :samples, through: :wells
@@ -29,19 +29,17 @@ class Plate < ApplicationRecord
   accepts_nested_attributes_for :wells
   enum state: %i[preparing prepared testing complete analysed]
   validates :wells, length: {maximum: 96, minimum: 96}
-  qr_for :uid
+  barcode_for :uid
   attr_accessor :assign_error
   validates_with UniqueWellPlateValidator, on: :create
   validates_with HasOtherErrorsValidator
 
-
   before_create :set_uid
-  scope :is_preparing, -> {where(state: Plate.states[:preparing])}
-  scope :is_prepared, -> {where(state: Plate.states[:prepared])}
-  scope :is_testing, -> {where(state: Plate.states[:testing])}
-  scope :is_complete, -> {where(state: Plate.states[:complete])}
-  scope :is_done, -> {where(state: Plate.states[:analysed])}
-
+  scope :is_preparing, -> { where(state: Plate.states[:preparing]) }
+  scope :is_prepared, -> { where(state: Plate.states[:prepared]) }
+  scope :is_testing, -> { where(state: Plate.states[:testing]) }
+  scope :is_complete, -> { where(state: Plate.states[:complete]) }
+  scope :is_done, -> { where(state: Plate.states[:analysed]) }
 
   def self.build_plate
     plate = Plate.new
@@ -83,7 +81,6 @@ class Plate < ApplicationRecord
       end
     end
   end
-
 end
 
 module PlateHelper
