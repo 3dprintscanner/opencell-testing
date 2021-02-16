@@ -1,7 +1,7 @@
 class TestsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_test, only: [:show, :edit, :update, :destroy, :analyse, :confirm]
-  before_action :set_plate, except: [:complete, :analyse, :done]
+  before_action :set_plate, except: [:complete, :done]
   around_action :wrap_in_current_user, only: [:create, :confirm, :update]
   after_action :verify_authorized
 
@@ -35,28 +35,37 @@ class TestsController < ApplicationController
   end
 
   def analyse
-  end 
+    if @plate.analysed?
+      flash[:alert] = "Invalid plate state to analyse"
+      redirect_to(request.referrer || staff_dashboard_path) and return 
+    end
+  end
 
   # POST /tests
   # POST /tests.json
   def create
     tp = test_params.merge!(plate_id: params[:plate_id])
-    @plate.test = Test.new(tp)
     @test = Test.new(tp)
-    @test.plate.complete!
-    authorize @test
+    authorize Test
     respond_to do |format|
       if @test.save
-        format.html { redirect_to plate_url(@plate), notice: 'Test was successfully created.' }
-        format.json { render :show, status: :created, location: @test }
+        @test.plate.complete!
+        format.html { redirect_to plate_url(@test.plate), notice: 'Test was successfully created.'}
+        format.json { render :show, status: :created, location: test }
       else
-        format.html { render :new, status: :unprocessable_entity  }
+        format.html { render :new, status: :unprocessable_entity}
         format.json { render json: @test.errors, status: :unprocessable_entity }
       end
     end
   end
 
   def confirm
+
+    if @plate.analysed?
+      flash[:alert] = "Invalid plate state to confirm"
+      redirect_to(request.referrer || plates_tests_path(@plate, @test)) and return 
+    end
+
     tp = test_analysis_params.merge!(plate_id: params[:plate_id])
     @test.update(tp)
     @test.plate.analysed!
@@ -98,22 +107,22 @@ class TestsController < ApplicationController
     end
   end
 
-  private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_test
-      @test = authorize Test.find(params[:id])
-    end
+private
+  # Use callbacks to share common setup or constraints between actions.
+  def set_test
+    @test = authorize Test.find(params[:id])
+  end
 
-    def set_plate
-      @plate = Plate.find(params[:plate_id])
-    end
+  def set_plate
+    @plate = Plate.find(params[:plate_id])
+  end
 
-    # Only allow a list of trusted parameters through.
-    def test_params
-      params.fetch(:test, {}).permit(:user_id, result_files: [] , test_results_attributes: [:value, :well_id, :id,:test_id])
-    end
+  # Only allow a list of trusted parameters through.
+  def test_params
+    params.fetch(:test, {}).permit(:user_id, :result_file, test_results_attributes: [:value, :well_id, :id,:test_id])
+  end
 
-    def test_analysis_params
-      params.fetch(:test, {}).permit(:user_id, result_files: [] , test_results_attributes: [:comment, :state, :well_id, :id,:test_id])
-    end
+  def test_analysis_params
+    params.fetch(:test, {}).permit(:user_id, :result_file, test_results_attributes: [:comment, :state, :well_id, :id,:test_id])
+  end
 end
