@@ -10,7 +10,7 @@ gem 'bootstrap'
 gem 'activeadmin'
 gem 'jquery-rails'
 # Use Puma as the app server
-gem 'puma', '~> 3.11'
+gem 'puma', '~> 4.3'
 gem 'pg'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5.0'
