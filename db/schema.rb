@@ -2,15 +2,15 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# This file is the source Rails uses to define your schema when running `rails
-# db:schema:load`. When creating a new database, `rails db:schema:load` tends to
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
 # be faster and is potentially less error prone than running all of your
 # migrations from scratch. Old migrations may fail to apply correctly if those
 # migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_12_03_165607) do
+ActiveRecord::Schema.define(version: 2021_05_18_162756) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -47,7 +47,14 @@ ActiveRecord::Schema.define(version: 2020_12_03_165607) do
     t.bigint "byte_size", null: false
     t.string "checksum", null: false
     t.datetime "created_at", null: false
+    t.string "service_name", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "admin_users", force: :cascade do |t|
@@ -69,6 +76,7 @@ ActiveRecord::Schema.define(version: 2020_12_03_165607) do
     t.datetime "updated_at", precision: 6, null: false
     t.boolean "notify"
     t.string "url"
+    t.jsonb "headers"
     t.bigint "labgroup_id", null: false
     t.index ["api_key_hash"], name: "index_clients_on_api_key_hash"
     t.index ["labgroup_id"], name: "index_clients_on_labgroup_id"
@@ -117,10 +125,12 @@ ActiveRecord::Schema.define(version: 2020_12_03_165607) do
     t.datetime "updated_at", null: false
     t.integer "state", default: 0
     t.string "uid"
+    t.bigint "user_id"
     t.integer "lab_id", null: false
     t.index ["lab_id"], name: "index_plates_on_lab_id"
     t.index ["state"], name: "index_plates_on_state"
     t.index ["uid"], name: "index_plates_on_uid", unique: true
+    t.index ["user_id"], name: "index_plates_on_user_id"
   end
 
   create_table "records", force: :cascade do |t|
@@ -153,7 +163,7 @@ ActiveRecord::Schema.define(version: 2020_12_03_165607) do
     t.string "uid"
     t.bigint "client_id"
     t.boolean "control", default: false
-    t.boolean "is_retest", default: false, null: false
+    t.boolean "is_retest", default: false
     t.index ["client_id"], name: "index_samples_on_client_id"
     t.index ["plate_id"], name: "index_samples_on_plate_id"
     t.index ["state"], name: "index_samples_on_state"
@@ -183,6 +193,7 @@ ActiveRecord::Schema.define(version: 2020_12_03_165607) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "comment"
+    t.string "batch"
     t.index ["plate_id"], name: "index_tests_on_plate_id", unique: true
     t.index ["user_id"], name: "index_tests_on_user_id"
   end
@@ -199,14 +210,13 @@ ActiveRecord::Schema.define(version: 2020_12_03_165607) do
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "confirmation_sent_at"
-    t.string "api_key"
     t.datetime "locked_at"
     t.integer "failed_attempts", default: 0
     t.string "unlock_token"
     t.string "unique_session_id"
     t.bigint "security_question_id"
     t.string "security_question_answer"
-    t.index ["api_key"], name: "index_users_on_api_key"
+    t.boolean "is_active", default: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -226,6 +236,7 @@ ActiveRecord::Schema.define(version: 2020_12_03_165607) do
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "clients", "labgroups"
   add_foreign_key "headers", "clients"
   add_foreign_key "records", "samples"

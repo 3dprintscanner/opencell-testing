@@ -1,6 +1,5 @@
 class PlatesController < ApplicationController
   before_action :authenticate_user!
-  before_action :verify_labgroup
   before_action :set_plate, only: [:show, :edit, :update, :destroy]
   around_action :wrap_in_current_user
   after_action :verify_authorized

@@ -1,5 +1,7 @@
+require 'json'
 module PlatesHelper
 
+  extend self
   def generate_well_cell(well)
     unless well.sample.nil?
       if(Sample.states[well.sample.state] == Sample.states[:retest])
@@ -76,8 +78,6 @@ module PlatesHelper
   end
 
 
-  
-
   def test_result_exists?(well)
     !well.test_result.nil? && !well.sample.nil?
   end
@@ -95,4 +95,40 @@ module PlatesHelper
       fa_icon "question-circle", class: 'fa-fw'
     end
   end
+
+  def westgard_link(plate)
+    return nil unless plate
+    filename = "tests-#{plate.uid}.json"
+    url = ENV.fetch("WESTGARD_STORAGE") { 'https://opencellstorage.blob.core.windows.net/results/' }
+    uri = URI.join(url, filename)
+      begin
+        result = Net::HTTP.get_response(uri)
+        if result.code == "200"
+          b = JSON.parse(result.body)
+          list_elements = b.map do |tst|
+            content_tag(:span, title: tst['name']) do
+              if tst['success']
+                fa_icon "check", class: 'fa-fw'
+              else
+                fa_icon "cross", class: 'fa-fw'
+              end
+            end
+          end
+          c = content_tag(:span) do
+            list_elements.each do |test|
+              concat test
+            end
+          end
+          puts c
+          return link_to uri.to_s do 
+                c
+            end 
+        else
+          return p "No Results"
+        end
+    rescue => exception
+      return p "Fetch Error"
+    end
+  end
+
 end

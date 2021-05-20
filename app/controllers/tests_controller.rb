@@ -1,6 +1,5 @@
 class TestsController < ApplicationController
   before_action :authenticate_user!
-  before_action :verify_labgroup
   before_action :set_test, only: [:show, :edit, :update, :destroy, :analyse, :confirm]
   before_action :set_plate, except: [:complete, :done]
   around_action :wrap_in_current_user, only: [:create, :confirm, :update, :createfile]
@@ -16,7 +15,11 @@ class TestsController < ApplicationController
 
   def done
     authorize Test
-    @tests = Test.by_lab(@lab).includes(:result_file_attachment, :user, :plate).where(plates: { state: Plate.states[:analysed] })
+
+    respond_to do |format|
+      format.html
+      format.json { render json: TestDatatable.new(params, view_context: view_context, lab: @lab, state: Plate.states[:analysed]) }
+    end
   end
 
   # GET /tests/1
@@ -130,7 +133,7 @@ private
 
   # Only allow a list of trusted parameters through.
   def test_params
-    params.fetch(:test, {}).permit(:user_id, :result_file, :comment, test_results_attributes: [:state, :well_id, :id,:test_id])
+    params.fetch(:test, {}).permit(:user_id, :result_file, :comment, :batch, test_results_attributes: [:state, :well_id, :id,:test_id])
   end
 
   def test_file_params
@@ -138,6 +141,6 @@ private
   end
 
   def test_analysis_params
-    params.fetch(:test, {}).permit(:user_id, :result_file, :comment, test_results_attributes: [:comment, :state, :well_id, :id,:test_id])
+    params.fetch(:test, {}).permit(:user_id, :result_file, :comment, :batch, test_results_attributes: [:comment, :state, :well_id, :id,:test_id])
   end
 end

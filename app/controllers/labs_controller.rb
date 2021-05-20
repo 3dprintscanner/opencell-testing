@@ -1,4 +1,6 @@
 class LabsController < ApplicationController
+  skip_before_action :verify_labgroup
+  skip_before_action :set_state_quantities
   before_action :authenticate_user!
   before_action :set_lab, only: [:show, :edit, :update, :destroy]
 

@@ -1,12 +1,12 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.7.2'
+ruby '2.7.3'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.0'
+gem 'rails', '~> 6.1.0'
 # Use sqlite3 as the database for Active Record
-gem 'bootstrap'
+gem 'bootstrap', '~> 4.5'
 gem 'activeadmin'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
@@ -93,4 +93,4 @@ gem "sidekiq"
 
 gem "sidekiq_alive", "~> 2.0"
 
-gem "ajax-datatables-rails", "~> 1.2"
+gem "ajax-datatables-rails", "~> 1.3"

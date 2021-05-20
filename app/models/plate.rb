@@ -30,8 +30,9 @@ class Plate < ApplicationRecord
   has_many :samples, through: :wells
   belongs_to :lab
   has_one :test, dependent: :destroy
+  belongs_to :user
   accepts_nested_attributes_for :wells
-  enum state: %i[preparing prepared testing complete analysed]
+  enum state: { preparing: 0, prepared: 1, testing: 2, complete: 3, analysed: 4 }
   validates :wells, length: { maximum: 96, minimum: 96 }
   barcode_for :uid
   attr_accessor :assign_error, :assign_control_error
@@ -44,7 +45,7 @@ class Plate < ApplicationRecord
   scope :is_testing, -> { where(state: Plate.states[:testing]) }
   scope :is_complete, -> { where(state: Plate.states[:complete]) }
   scope :is_done, -> { where(state: Plate.states[:analysed]) }
-  scope :by_lab, ->(lab){ where(lab_id: lab.labgroups.flat_map{ |g| g.labs.map(&:id)}) }
+  scope :by_lab, ->(lab) { where(lab_id: lab.labgroups.flat_map { |g| g.labs.map(&:id) }) }
 
   def self.build_plate
     plate = Plate.new
@@ -73,6 +74,13 @@ class Plate < ApplicationRecord
 
       if PlateHelper.negative_extraction_controls.include?({row: well[:row], col: well[:column].to_i})
         if mapping[:control_code].to_i != Sample::CONTROL_CODE
+          @assign_control_error = true
+          break
+        end
+
+        sample = Sample.create!(client: Client.control_client(lab.main_labgroup), state: Sample.states[:preparing], control: true)
+      elsif PlateHelper.positive_control_positions.include?({row: well[:row], col: well[:column].to_i})
+        if mapping[:control_code].to_i != Sample::POSITIVE_CONTROL_CODE
           @assign_control_error = true
           break
         end
@@ -113,14 +121,18 @@ module PlateHelper
   end
 
   def self.negative_extraction_controls
-    [{ row: 'A', col: 1 }, { row: 'D', col: 6 }, { row: 'E', col: 6 }, { row: 'E', col: 12 }]
+    [{ row: 'H', col: 1 }, { row: 'D', col: 6 }, { row: 'E', col: 6 }, { row: 'E', col: 12 }]
   end
 
   def self.auto_control_positions
     [{ row: 'F', col: 12 }, { row: 'G', col: 12 }, { row: 'H', col: 12 }]
   end
 
+  def self.positive_control_positions
+    [{ row: 'A', col: 1 }]
+  end
+
   def self.control_positions
-    negative_extraction_controls + auto_control_positions
+    negative_extraction_controls + auto_control_positions + positive_control_positions
   end
 end

@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   include Pundit
+  before_action :verify_labgroup, if: :user_signed_in?
   before_action :set_state_quantities, if: :user_signed_in?
   before_action :set_raven_context
 
@@ -15,15 +16,22 @@ class ApplicationController < ActionController::Base
     return if !user_signed_in?
     unless session[:labgroup] && session[:lab]
       flash[:alert] = "Please set a lab group"
-      redirect_to session_labgroup_users_path and return
+      redirect_to session_labgroup_users_path
+      return
     end
-    @lab = Lab.find(session[:lab])
-  end 
-  
+    #check the session labgroup and find the lab
+    @labgroup = Labgroup.find(session[:labgroup])
+    @lab = @labgroup.labs.find_by_id(session[:lab])
+    unless @lab
+      flash[:alert] = "Lab not member of labgroup"
+      redirect_to session_labgroup_users_path
+      return
+    end
+  end
+
   def set_state_quantities
 
     unless request.format.json?
-      verify_labgroup
       sample_groups = Sample.by_lab(@lab).group(:state).count
       plate_groups = Plate.by_lab(@lab).group(:state).count
       @pendingprepare_count = sample_groups[:received.to_s] || 0

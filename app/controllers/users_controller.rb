@@ -1,5 +1,7 @@
 
 class UsersController < ApplicationController
+  skip_before_action :verify_labgroup, only: [:session_labgroup, :session_labgroup_set, :session_lab, :session_lab_set]
+  skip_before_action :set_state_quantities, only: [:session_labgroup, :session_labgroup_set, :session_lab, :session_lab_set]
   before_action :set_user, only: [:show, :edit, :destroy]
   before_action :authenticate_user!
   after_action :verify_authorized
@@ -60,8 +62,7 @@ class UsersController < ApplicationController
   def create_staff
     authorize User
     generated_password = Devise.friendly_token.first(12)
-    @api_key = User.roles[user_params[:role]] == User.roles[:staff] ? nil : SecureRandom.base64(16)
-    @user = User.new(user_params.merge!({password: generated_password, password_confirmation: generated_password, api_key: @api_key}))
+    @user = User.new(user_params.merge!({password: generated_password, password_confirmation: generated_password}))
     respond_to do |format|
       if @user.save
         if @user.patient?

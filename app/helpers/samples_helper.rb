@@ -37,6 +37,7 @@ module SamplesHelper
         status.capitalize
       end
     else
+      puts "plate status is #{status}"
       raise
     end
   end
@@ -90,6 +91,14 @@ module SamplesHelper
 
   def control?(row, col)
     PlateHelper.control_positions.include?(row: row, col: col)
+  end
+
+  def negative_control?(row, col)
+    PlateHelper.negative_extraction_controls.include?(row: row, col: col)
+  end
+
+  def positive_control?(row, col)
+    PlateHelper.positive_control_positions.include?(row: row, col: col)
   end
 
   def auto_control?(row, col)

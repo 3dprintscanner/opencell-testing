@@ -345,6 +345,7 @@ RSpec.describe Sample, type: :model do
         Sample.with_user(@user) do
           labgroup = create(:labgroup)
           @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: labgroup.labs.first)
+          @plate.user = create(:user)
           @sample = create(:sample, state: :received, client: @client)
           @plate.wells.first.sample = @sample
           @plate.save!
@@ -357,6 +358,7 @@ RSpec.describe Sample, type: :model do
         Sample.with_user(@user) do
           labgroup = create(:labgroup)
           @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: labgroup.labs.first)
+          @plate.user = create(:user)
           @sample = create(:sample, state: :received, client: @client)
           @plate.wells.first.sample = @sample
           @plate.save!

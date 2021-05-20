@@ -8,7 +8,7 @@
             <div class="p-1">
                 <div class="mt-1 mb-1">
                     <span>
-                        <%= fa_icon "hashtag", class: 'fa-fw' %>
+                        <%= fa_icon "hashtag", class: 'fa-fw', title: 'Uid' %>
                     </span>
                     <span>
                         <small><%= @sample.uid %></small>
@@ -16,7 +16,7 @@
                 </div>
                 <div class="mt-1 mb-1">
                     <span>
-                        <%= fa_icon "clock-o", class: 'fa-fw' %>
+                        <%= fa_icon "clock-o", class: 'fa-fw', title: 'Created At' %>
                     </span>
                     <span>
                         <small><%= @sample.created_at.strftime('%A %-d %b %H:%M') %></small>
@@ -24,7 +24,7 @@
                 </div>
                 <div class="mt-1 mb-1">
                     <span>
-                        <%= fa_icon "user", class: 'fa-fw' %>
+                        <%= fa_icon "user", class: 'fa-fw', title: 'Client' %>
                     </span>
                     <span>
                         <small><%= link_to @sample.client.name, @sample.client %></small>
@@ -32,7 +32,7 @@
                 </div>
                 <div class="mt-1 mb-1">
                     <span>
-                        <%= fa_icon "magic", class: 'fa-fw' %>
+                        <%= fa_icon "magic", class: 'fa-fw', title: 'State' %>
                     </span>
                     <span>
                         <small><%= get_badge(@sample.state) %></small>
@@ -40,7 +40,7 @@
                 </div>
                 <div class="mt-1 mb-1">
                     <span>
-                        <%= fa_icon "flask", class: 'fa-fw' %>
+                        <%= fa_icon "flask", class: 'fa-fw', title: 'Control' %>
                     </span>
                     <span>
                         <small><%= get_control_badge(@sample.control?) %></small>
@@ -49,14 +49,22 @@
                 <% if @sample.test_result.present? %>
                 <div class="mt-1 mb-1">
                     <span>
-                        <%= fa_icon "check", class: 'fa-fw' %>
+                        <%= fa_icon "check", class: 'fa-fw', title: 'Result' %>
                     </span>
                     <span>
                         <span><%= get_result_icon(@sample.test_result) %></span>
                         <span><%= @sample.test_result.state.capitalize %></span>
                     </span>
                 </div>
-                <% end  %>
+                <div class="mt-1 mb-1">
+                    <span>
+                        <%= fa_icon "user-plus", class: 'fa-fw', title: 'Confirmed by' %>
+                    </span>
+                    <span>
+                        <span><%= link_to @sample.test_result.test.user.email, @sample.test_result.test.user %></span>
+                    </span>
+                </div>
+                <% end %>
                 <% if @sample.retest? %>
                 <div class="mt-1 mb-1">
                     <span>

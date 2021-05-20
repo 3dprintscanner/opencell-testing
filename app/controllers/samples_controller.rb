@@ -1,6 +1,6 @@
 class SamplesController < ApplicationController
   before_action :authenticate_user!
-  before_action :verify_labgroup
+  # before_action :verify_labgroup
   before_action :set_sample, only: [:show, :edit, :destroy, :receive, :prepare, :prepared, :ship, :tested, :analyze, :reject, :retestpositive, :retestinconclusive]
   around_action :wrap_in_current_user
   after_action :verify_policy_scoped, only: [:step3_pendingprepare, :pending_plate]
@@ -11,18 +11,18 @@ class SamplesController < ApplicationController
     authorize Sample
     respond_to do |format|
       format.html
-      format.json { render json: SampleDatatable.new(params, view_context: view_context) }
+      format.json { render json: SampleDatatable.new(params, view_context: view_context, labgroup: @labgroup) }
     end
   end
 
   def pending_plate
-    @samples = policy_scope(Sample.labgroup(session[:labgroup]).is_received.includes(:client).includes(rerun_for: [source_sample: [:test_result]]))
+    @samples = policy_scope(Sample.labgroup(@labgroup).is_received.includes(:client).includes(rerun_for: [source_sample: [:test_result]]))
     authorize Sample
   end
 
   def step3_pendingprepare
     @plate = Plate.build_plate
-    @samples = policy_scope(Sample.labgroup(session[:labgroup]).includes(:client).is_received)
+    @samples = policy_scope(Sample.labgroup(@labgroup).includes(:client).is_received)
     authorize Sample
   end
 
@@ -284,7 +284,7 @@ class SamplesController < ApplicationController
   end
 
   def plate_params
-    params.require(:plate).permit(wells_attributes:[:id, :row, :column ])
+    params.require(:plate).permit(:user_id, wells_attributes:[:id, :row, :column ])
   end
   def get_mappings
     params.require(:sample_well_mapping).permit(mappings:[:id,:row, :column, :control, :control_code])[:mappings]
