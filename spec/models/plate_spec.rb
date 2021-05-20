@@ -25,10 +25,21 @@ RSpec.describe Plate, type: :model do
 
     it "Should not create a valid plate with no user" do
       plate =  Plate.build_plate
+      lab = create(:lab)
       plate.user = nil
+      plate.lab = lab
       expect(plate.save).to be false
       expect(plate.errors.size).to be 1
       expect(plate.errors[:user].first).to eq "must exist"
+    end
+
+    it "Should not create a valid plate with no lab" do
+      plate =  Plate.build_plate
+      plate.user = create(:user)
+      plate.lab = nil
+      expect(plate.save).to be false
+      expect(plate.errors.size).to be 1
+      expect(plate.errors[:lab].first).to eq "must exist"
     end
 
     it "Should not create a plate with insufficient wells" do

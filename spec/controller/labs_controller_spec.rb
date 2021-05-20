@@ -31,13 +31,13 @@ RSpec.describe LabsController, type: :controller do
   let(:valid_attributes) do
     {
       name: 'testlab',
-      labgroup_id: @client.labgroup.id
+      labgroups: [@client.labgroup]
     }
   end
 
   let(:invalid_attributes) do
     {
-      name: 'testlab',
+      name: nil,
       labgroup_id: nil
     }
   end

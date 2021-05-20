@@ -1,6 +1,7 @@
 class Lab < ApplicationRecord
   has_and_belongs_to_many :labgroups
   has_many :plates
+  validates_presence_of :name
 
 
   def main_labgroup

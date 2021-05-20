@@ -3,7 +3,7 @@ FactoryBot.define do
     name { "MyString" }
 
     after(:create) do |labgroup|
-      create_list(:lab, 1, labgroup: labgroup)
+      create_list(:lab, 1, labgroups: [labgroup])
     end
   end
 end

@@ -56,7 +56,7 @@ RSpec.describe PlatesController, type: :controller do
       labgroup = create(:labgroup)
       @plate = create(:plate, wells: wells, lab: labgroup.labs.first)
       session[:lab] = @plate.lab.id
-      session[:labgroup] = @plate.lab.labgroup.id
+      session[:labgroup] = @plate.lab.labgroups.first.id
     end
 
     it "routes to #index" do
@@ -80,8 +80,9 @@ RSpec.describe PlatesController, type: :controller do
       sign_in @user
       labgroup = create(:labgroup)
       @plate = create(:plate, wells: build_list(:well, 96), lab: labgroup.labs.first)
+
       session[:lab] = @plate.lab.id
-      session[:labgroup] = @plate.lab.labgroup.id
+      session[:labgroup] = @plate.lab.labgroups.first.id
     end
 
     it "routes to #index" do
