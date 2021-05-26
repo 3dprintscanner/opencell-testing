@@ -10,8 +10,8 @@ class AddLabToPlates < ActiveRecord::Migration[6.0]
       lab.labgroups << group
       lab.save!
     end
-
-    Plate.update_all(lab_id: lab.id)
+    ActiveRecord::Base.connection.execute("UPDATE plates SET lab_id=#{lab.id}")
+    # Plate.update_all(lab_id: lab.id)
     change_column_null :plates, :lab_id, false
     add_index :plates, :lab_id
   end
