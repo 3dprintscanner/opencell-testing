@@ -10,16 +10,15 @@ class TestsController < ApplicationController
 
   def complete
     authorize Test
-    @tests = Test.all.joins(:plate).where(plates: { state: Plate.states[:complete] })
+    @tests = Test.by_lab(@lab).joins(:plate).where(plates: { state: Plate.states[:complete] })
   end
 
   def done
     authorize Test
-    @tests = Test.all.includes(:result_file_attachment, :user, :plate).where(plates: { state: Plate.states[:analysed] })
 
     respond_to do |format|
       format.html
-      format.json { render json: TestDatatable.new(params, view_context: view_context) }
+      format.json { render json: TestDatatable.new(params, view_context: view_context, lab: @lab, state: Plate.states[:analysed]) }
     end
   end
 

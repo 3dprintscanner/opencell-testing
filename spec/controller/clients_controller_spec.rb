@@ -48,7 +48,11 @@ RSpec.describe ClientsController, type: :controller do
     before :each do
       @request.env["devise.mapping"] = Devise.mappings[:user]
       @user = create(:user, role: User.roles[:staff]) # in factories.rb you should create a factory for user
+      @labgroup = create(:labgroup)
+      session[:labgroup] = @labgroup.id
+      session[:lab] = @labgroup.labs.first.id
       sign_in @user
+
     end
 
     it "should view the index page" do
@@ -115,7 +119,7 @@ RSpec.describe ClientsController, type: :controller do
 
     it "should create a client with webhook parameters" do
 
-      notify_attributes = {headers_attributes: [{key: "Authorization", value: "Basic asd9h802ij"}]}
+      notify_attributes = {headers_attributes: [{key: "Authorization", value: "Basic asd9h802ij"}], labgroup_id: @labgroup.id}
       @client = build(:client, notify: true, name: "test name", url: 'https://abc.com/endpoint')
       post :create, params: { client: @client.attributes.merge!(notify_attributes) }
       expect(flash[:alert]).to_not be_present
@@ -129,20 +133,23 @@ RSpec.describe ClientsController, type: :controller do
     end
 
     it "should create a client with multiple parameters" do
-      notify_attributes = {headers_attributes: [{key: "Authorization", value: "Basic asd9h802ij"},{key: "apikey", value: "blah"}]}
+
+      notify_attributes = {headers_attributes: [{key: "Authorization", value: "Basic asd9h802ij"},{key: "apikey", value: "blah"}], labgroup_id: @labgroup.id}
       @client = build(:client, notify: true, name: "test name", url: 'https://abc.com/endpoint')
+
       attrs = @client.attributes.merge!(notify_attributes)
       post :create, params: { client: attrs }
       expect(flash[:alert]).to_not be_present
       expect(response).to have_http_status(:success)
-      expect(Client.last.notify).to eq true
-      expect(Client.last.name).to eq "test name"
-      expect(Client.last.url).to eq 'https://abc.com/endpoint'
-      expect(Client.last.headers.size).to eq 2
-      expect(Client.last.headers.first.key).to eq "Authorization"
-      expect(Client.last.headers.first.value).to eq "Basic asd9h802ij"
-      expect(Client.last.headers.second.key).to eq "apikey"
-      expect(Client.last.headers.second.value).to eq "blah"
+      updated = Client.find_by!(name: @client.name)
+      expect(updated.notify).to eq true
+      expect(updated.name).to eq "test name"
+      expect(updated.url).to eq 'https://abc.com/endpoint'
+      expect(updated.headers.size).to eq 2
+      expect(updated.headers.first.key).to eq "Authorization"
+      expect(updated.headers.first.value).to eq "Basic asd9h802ij"
+      expect(updated.headers.second.key).to eq "apikey"
+      expect(updated.headers.second.value).to eq "blah"
     end
 
     it "should update a client and its headers" do

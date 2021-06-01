@@ -8,6 +8,8 @@ class TestDatatable < AjaxDatatablesRails::ActiveRecord
 
   def initialize(params, opts = {})
     @view = opts[:view_context]
+    @lab = opts[:lab]
+    @state = opts[:state]
     super
   end
 
@@ -18,7 +20,9 @@ class TestDatatable < AjaxDatatablesRails::ActiveRecord
       id: { source: "Test.id", cond: :eq },
       plate_id: { source: "Test.plate_id"},
       created_at: { source: "Test.created_at" },
-      tested_by: { source: "User.email" }
+      tested_by: { source: "User.email" },
+      link: {source: "Test.link", searchable: false, orderable: false },
+      result_file: {source: "Test.result_file.name", searchable: false, orderable: false },
     }
   end
 
@@ -39,7 +43,7 @@ class TestDatatable < AjaxDatatablesRails::ActiveRecord
 
   def get_raw_records
     # insert query here
-    policy_scope(Test.all.includes(:result_file_attachment, :user, :plate).where(plates: { state: Plate.states[:analysed] }))
+    policy_scope(Test.by_lab(@lab).includes(:result_file_attachment, :user, :plate).where(plates: { state: @state }))
   end
 
 end

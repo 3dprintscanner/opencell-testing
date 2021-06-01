@@ -3,13 +3,26 @@ require 'rails_helper'
 RSpec.describe Client, type: :model do
 
   describe "validations" do
-    it "should not allow a duplicate name" do
-      @client_a = create(:client, name: "myname")
-      @client_b = build(:client, name: "myname")
+
+    before :each do
+      @labgroup = create(:labgroup)
+    end
+
+    it "should not allow a duplicate name for the same labgroup" do
+      @client_a = create(:client, name: "myname", labgroup: @labgroup)
+      @client_b = build(:client, name: "myname", labgroup: @labgroup)
 
       expect(@client_b.save).to eq false
       expect(@client_b.errors).to_not be nil
       expect(@client_b.errors[:name].first).to eq "has already been taken"
+    end
+
+    it "should allow a duplicate name for the same labgroup" do
+      @client_a = create(:client, name: "myname", labgroup: @labgroup)
+      @client_b = build(:client, name: "myname", labgroup: create(:labgroup))
+
+      expect(@client_b.save).to eq true
+      expect(@client_b.errors).to be_empty
     end
 
     it "should allow a different names" do
@@ -44,19 +57,35 @@ RSpec.describe Client, type: :model do
     end
 
     it "should require api key" do
-      @client_a = Client.new(name: 'blah', notify: false)
+      @client_a = Client.new(name: 'blah', notify: false, labgroup: @labgroup)
       expect { @client_a.save }.to raise_error "API key required"
     end
 
+    it "should require a labgroup api key" do
+      @client_a = Client.new(name: 'blah', notify: false, api_key: 'blah')
+      expect(@client_a.save).to eq false
+      expect(@client_a.errors[:labgroup].first).to eq "must exist"
+    end
+
     it "should create a valid record" do
-      @client_a = Client.new(name: 'blah', api_key: 'abc', notify: false)
+      @client_a = Client.new(name: 'blah', api_key: 'abc', notify: false, labgroup: @labgroup)
       expect(@client_a.save).to eq true
     end
 
-    it "should create only 1 instance of the control client" do
-      control = Client.control_client
-      control_2 = Client.control_client
+    it "should create only 1 instance of the control client per labgroup" do
+      labgroup = create(:labgroup)
+      control = Client.control_client(labgroup)
+      control_2 = Client.control_client(labgroup)
       expect(control).to eq control_2
+      expect(control.api_key.size).to eq 24
+    end
+
+    it "should create different control clients for different labgroups" do
+      labgroup = create(:labgroup)
+      labgroup_2 = create(:labgroup)
+      control = Client.control_client(labgroup)
+      control_2 = Client.control_client(labgroup_2)
+      expect(control).to_not eq control_2
     end
   end
 
@@ -105,13 +134,14 @@ RSpec.describe Client, type: :model do
   describe "stats" do
     before :each do
       @user = create(:user)
-      @client = create(:client)
+      @labgroup = create(:labgroup)
+      @client = create(:client, labgroup: @labgroup)
     end
 
     it "should generate valid stats when samples are created straight at commcomplete stage" do
       Sample.with_user(@user) do
         @sample = create(:sample, state: :tested, client: @client)
-        @plate = create(:plate, wells: build_list(:well, 96))
+        @plate = create(:plate, wells: build_list(:well, 96), lab: @labgroup.labs.first)
         @plate.wells.last.tap do |w|
           w.sample = @sample
           w.save!
@@ -143,7 +173,7 @@ RSpec.describe Client, type: :model do
         @sample.prepared!
         @sample.prepared!
         @sample.tested!
-        @plate = create(:plate, wells: build_list(:well, 96))
+        @plate = create(:plate, wells: build_list(:well, 96), lab: @labgroup.labs.first)
         @plate.wells.last.tap do |w|
           w.sample = @sample
           w.save!

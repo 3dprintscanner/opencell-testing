@@ -215,6 +215,47 @@ RSpec.describe Sample, type: :model do
         expect(@retest.rerun_for.source_sample).to eq @sample
       end
 
+      it "should create a client for the labgroup for posthoc retests if it does not already exist" do
+        @labgroup = create(:labgroup, name: 'testgroup')
+        @this_client = create(:client, labgroup: @labgroup)
+        Sample.with_user(@user) do
+          @sample = create(:sample, state: :received, client: @this_client)
+          @sample.preparing!
+          @sample.preparing!
+          @sample.prepared!
+          @sample.tested!
+          @sample.analysed!
+          @sample.communicated!
+          @sample.commcomplete!
+
+          @retest = @sample.create_posthoc_retest(Rerun::POSITIVE)
+        end
+        expect(@retest.uid).to eq @sample.uid
+        expect(@retest.state).to eq "received"
+        expect(@sample.state).to eq "retest"
+        expect(@retest.source_sample).to eq @sample
+        expect(@retest.rerun_for.retest.client.labgroup).to eq @labgroup
+        expect(@retest.rerun_for.source_sample).to eq @sample
+      end
+
+      it "should increase client countposthoc retests if it does not already exist" do
+        @labgroup = create(:labgroup, name: 'testgroup')
+        @this_client = create(:client, labgroup: @labgroup)
+        Sample.with_user(@user) do
+          @sample = create(:sample, state: :received, client: @this_client)
+          @sample.preparing!
+          @sample.preparing!
+          @sample.prepared!
+          @sample.tested!
+          @sample.analysed!
+          @sample.communicated!
+          @sample.commcomplete!
+
+          expect{ @sample.create_posthoc_retest(Rerun::POSITIVE) }.to change(Client, :count).by(1)
+        end
+      end
+
+
       it "should not create a rerun of a sample that has not been communicated already" do
         Sample.with_user(@user) do
           @sample = create(:sample, state: :received, client: @client)
@@ -270,7 +311,8 @@ RSpec.describe Sample, type: :model do
 
       it "should validate that the sample can only be one well on the same plate" do
         # this is hacky because we don't validate the changes to be added on the wells, rather make an assocation on the plate. This is brittle and relies on the awful method in the controller
-        plate = build(:plate, wells: 96.times.map { |t| build(:well) })
+        labgroup = create(:labgroup)
+        plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: labgroup.labs.first)
         plate.save
         @sample = nil
         Sample.with_user(@user) do
@@ -301,7 +343,8 @@ RSpec.describe Sample, type: :model do
 
       it "should not allow rejections if the sample is associated with a plate" do
         Sample.with_user(@user) do
-          @plate = Plate.build_plate
+          labgroup = create(:labgroup)
+          @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: labgroup.labs.first)
           @plate.user = create(:user)
           @sample = create(:sample, state: :received, client: @client)
           @plate.wells.first.sample = @sample
@@ -313,7 +356,8 @@ RSpec.describe Sample, type: :model do
 
       it "should throw reject if sample isn't rejectable" do
         Sample.with_user(@user) do
-          @plate = Plate.build_plate
+          labgroup = create(:labgroup)
+          @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: labgroup.labs.first)
           @plate.user = create(:user)
           @sample = create(:sample, state: :received, client: @client)
           @plate.wells.first.sample = @sample

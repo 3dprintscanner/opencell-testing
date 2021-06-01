@@ -2,10 +2,10 @@ class UniqueWellPlateValidator < ActiveModel::Validator
 
   def validate(record)
     if record.wells.group_by { |w| [w.row, w.column] }.any? { |_, group| group.size != 1 }
-      record.errors[:wells] << "Duplicate Well Found"
+      record.errors.add(:wells, "Duplicate Well Found")
     end
     if record.wells.select {|x| x.sample_id != nil}.group_by { |w| w.sample_id }.any? { |_, group| group.size != 1 }
-      record.errors[:plate] << "Duplicate Sample In plate Found"
+      record.errors.add(:plate, "Duplicate Sample In plate Found")
     end
   end
 end
@@ -14,11 +14,13 @@ class HasOtherErrorsValidator < ActiveModel::Validator
 
   def validate(record)
     if record.assign_error == true
-      record.errors[:wells] << 'Illegal Well Reference'
+      record.errors.add(:wells, 'Illegal Well Reference')
     end
+
     if record.assign_control_error == true
-      record.errors[:controls] << 'Control not checked'
+      record.errors.add(:controls, 'Control not checked')
     end
+
   end
 end
 
@@ -28,6 +30,7 @@ class Plate < ApplicationRecord
 
   has_many :wells, dependent: :destroy
   has_many :samples, through: :wells
+  belongs_to :lab
   has_one :test, dependent: :destroy
   belongs_to :user
   accepts_nested_attributes_for :wells
@@ -44,6 +47,7 @@ class Plate < ApplicationRecord
   scope :is_testing, -> { where(state: Plate.states[:testing]) }
   scope :is_complete, -> { where(state: Plate.states[:complete]) }
   scope :is_done, -> { where(state: Plate.states[:analysed]) }
+  scope :by_lab, ->(lab) { where(lab_id: lab.labgroups.flat_map { |g| g.labs.map(&:id) }) }
 
   def self.build_plate
     plate = Plate.new
@@ -75,15 +79,16 @@ class Plate < ApplicationRecord
           @assign_control_error = true
           break
         end
-        sample = Sample.create!(client: Client.control_client, state: Sample.states[:preparing], control: true)
+
+        sample = Sample.create!(client: Client.control_client(lab.main_labgroup), state: Sample.states[:preparing], control: true)
       elsif PlateHelper.positive_control_positions.include?({row: well[:row], col: well[:column].to_i})
         if mapping[:control_code].to_i != Sample::POSITIVE_CONTROL_CODE
           @assign_control_error = true
           break
         end
-        sample = Sample.create!(client: Client.control_client, state: Sample.states[:preparing], control: true)
+        sample = Sample.create!(client: Client.control_client(lab.main_labgroup), state: Sample.states[:preparing], control: true)
       elsif PlateHelper.auto_control_positions.include?({row: well[:row], col: well[:column].to_i})
-        sample = Sample.create!(client: Client.control_client, state: Sample.states[:preparing], control: true)
+        sample = Sample.create!(client: Client.control_client(lab.main_labgroup), state: Sample.states[:preparing], control: true)
       else
         sample = Sample.find(mapping[:id])
       end

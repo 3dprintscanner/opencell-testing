@@ -1,5 +1,7 @@
 
 class UsersController < ApplicationController
+  skip_before_action :verify_labgroup, only: [:session_labgroup, :session_labgroup_set, :session_lab, :session_lab_set]
+  skip_before_action :set_state_quantities, only: [:session_labgroup, :session_labgroup_set, :session_lab, :session_lab_set]
   before_action :set_user, only: [:show, :edit, :destroy]
   before_action :authenticate_user!
   after_action :verify_authorized
@@ -23,6 +25,39 @@ class UsersController < ApplicationController
   def patient_created
   end 
 
+  def session_labgroup
+    authorize current_user
+    @session_location = { labgroup: session[:labgroup]}
+  end
+
+  def session_labgroup_set
+    authorize current_user
+    p = params.require(:ss).permit(:labgroup)
+    puts p
+    unless Labgroup.find(p[:labgroup])
+      raise "cannot invalid labgroup"
+    end
+    session[:labgroup] = p[:labgroup]
+
+    redirect_to session_lab_users_path
+  end
+
+  def session_lab
+    authorize current_user
+    @session_location = { labgroup: session[:labgroup], lab: session[:lab] }
+  end
+
+  def session_lab_set
+    authorize current_user
+    p = params.require(:ss).permit(:lab)
+    puts p
+    unless Labgroup.find(session[:labgroup]).labs.includes(Lab.find(p[:lab]))
+      raise "cannot reconcile lab with group"
+    end
+    session[:lab] = p[:lab]
+
+    redirect_to staff_dashboard_path
+  end
 
   def create_staff
     authorize User

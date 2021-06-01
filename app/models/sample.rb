@@ -29,6 +29,8 @@ class Sample < ApplicationRecord
   scope :is_tested, -> { where(state: Sample.states[:tested]) }
   scope :is_analysed, -> { where(state: Sample.states[:analysed]) }
   scope :is_communicated, -> { where(state: Sample.states[:communicated]) }
+  scope :by_lab, ->(lab) { joins(:client).where(clients: {labgroup_id: lab.labgroups.map(&:id)}) }
+  scope :labgroup, ->(labgroup) { joins(:client).where(clients: { labgroup_id: labgroup }) }
 
   after_update_commit :send_notification_after_analysis, if: :communicated?
   after_update_commit :send_rejection, if: :rejected?
@@ -131,10 +133,9 @@ class Sample < ApplicationRecord
     raise "Sample cannot be retested unless communicated" unless commcomplete?
     raise "Cannot retest a control sample".freeze if control?
 
-    retest_client = Client.find_by(name: Client::INTERNAL_RERUN_NAME)
-
-    if(retest_client.nil?)
-      retest_client = Client.create!(name: Client::INTERNAL_RERUN_NAME, api_key: SecureRandom.base64(16), notify: false)
+    retest_client = Client.find_or_create_by!(name: Client::INTERNAL_RERUN_NAME, labgroup: client.labgroup) do |c|
+      c.api_key = SecureRandom.base64(16)
+      c.notify = false
     end
 
     self.transaction do

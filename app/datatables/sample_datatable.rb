@@ -8,6 +8,7 @@ class SampleDatatable < AjaxDatatablesRails::ActiveRecord
 
   def initialize(params, opts = {})
     @view = opts[:view_context]
+    @labgroup = opts[:labgroup]
     super
   end
 
@@ -19,7 +20,8 @@ class SampleDatatable < AjaxDatatablesRails::ActiveRecord
       uid: { source: "Sample.uid", cond: :like },
       state: { source: "Sample.state", cond: :like },
       created_at: { source: "Sample.created_at" },
-      updated_at: { source: "Sample.created_at" }
+      updated_at: { source: "Sample.created_at" },
+      link: { source: "Sample.link", searchable: false, orderable: false }
     }
   end
 
@@ -40,7 +42,7 @@ class SampleDatatable < AjaxDatatablesRails::ActiveRecord
 
   def get_raw_records
     # insert query here
-    policy_scope(Sample.all)
+    policy_scope(Sample.labgroup(@labgroup))
   end
 
 end
