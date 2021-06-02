@@ -23,6 +23,14 @@
                   <small><%= @plate.uid %></small>
                 </span>
               </div>
+              <div class="mt-1 mb-1">
+                <span >
+                  <%= fa_icon "flask", class: 'fa-fw', title: 'Lab' %>
+                </span>
+                <span>
+                  <small><%= link_to @plate.lab.name, @plate.lab %></small>
+                </span>
+              </div>
               <% if @plate.user %>
               <div class="mt-1 mb-1">
                 <span >
