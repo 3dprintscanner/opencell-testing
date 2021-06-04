@@ -3,14 +3,18 @@ require 'rails_helper'
 RSpec.describe ResultNotifyJob, type: :job do
   include ActiveJob::TestHelper
 
-  it "should perform a correct request " do
+  before :each do
     @user = create(:user)
     @client = create(:client, notify: true)
+    @client.labgroup.users << @user
+    @client.labgroup.save!
 
     @wells = build_list(:well, 96)
-    @plate = create(:plate, wells: @wells, lab: @client.labgroup.labs.first)
-
+    @plate = create(:plate, wells: @wells, lab: @client.labgroup.labs.first, user: @user)
     @test = create(:test, plate: @plate, user: @user)
+  end
+
+  it "should perform a correct request " do
 
     Sample.with_user(@user) do
       @sample = create(:sample, state: Sample.states[:tested], client: @client)
@@ -35,13 +39,7 @@ RSpec.describe ResultNotifyJob, type: :job do
   end
 
   it "should fail when not 2XX " do
-    @user = create(:user)
-    @client = create(:client, notify: true)
 
-    @wells = build_list(:well, 96)
-    @plate = create(:plate, wells: @wells, lab: @client.labgroup.labs.first)
-
-    @test = create(:test, plate: @plate, user: @user)
       perform_enqueued_jobs do
         expect do
           Sample.with_user(@user) do

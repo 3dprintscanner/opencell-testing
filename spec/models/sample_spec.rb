@@ -333,6 +333,11 @@ RSpec.describe Sample, type: :model do
     end
 
     describe "rejections" do
+      before :each do
+        @labgroup = create(:labgroup)
+        @labgroup.users << @user
+        @labgroup.save!
+      end
       it "should not allow rejections if the sample has already been rejected" do
         Sample.with_user(@user) do
           @sample = create(:sample, state: :received, client: @client)
@@ -343,9 +348,7 @@ RSpec.describe Sample, type: :model do
 
       it "should not allow rejections if the sample is associated with a plate" do
         Sample.with_user(@user) do
-          labgroup = create(:labgroup)
-          @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: labgroup.labs.first)
-          @plate.user = create(:user)
+          @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: @labgroup.labs.first, user: @user)
           @sample = create(:sample, state: :received, client: @client)
           @plate.wells.first.sample = @sample
           @plate.save!
@@ -356,9 +359,7 @@ RSpec.describe Sample, type: :model do
 
       it "should throw reject if sample isn't rejectable" do
         Sample.with_user(@user) do
-          labgroup = create(:labgroup)
-          @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: labgroup.labs.first)
-          @plate.user = create(:user)
+          @plate = build(:plate, wells: 96.times.map { |t| build(:well) }, lab: @labgroup.labs.first, user: @user)
           @sample = create(:sample, state: :received, client: @client)
           @plate.wells.first.sample = @sample
           @plate.save!

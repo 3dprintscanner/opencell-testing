@@ -305,7 +305,7 @@ RSpec.describe SamplesController, type: :controller do
       # note that samples should not be in the permanent control wells
       before :each do
         @wells = build_list(:well, 96)
-        @plate = build(:plate, wells: @wells)
+        @plate = build(:plate, wells: @wells, user: @user)
       end
       it "should create a valid plate with valid samples" do
         Sample.with_user(@user) do

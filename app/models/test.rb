@@ -5,6 +5,7 @@ class Test < ApplicationRecord
   validates_uniqueness_of :plate_id
   validates :result_file, presence: true, blob: { content_type: ['text/csv', 'application/vnd.ms-excel', 'application/zip'] }
   validates_with AntivirusValidator, attribute_name: :result_file
+  validates_with LabgroupValidator
   has_many :test_results, dependent: :destroy
   accepts_nested_attributes_for :test_results
   # find all tests where the plates LAB id is the current lab

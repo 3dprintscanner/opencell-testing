@@ -18,6 +18,8 @@ class User < ApplicationRecord
 
   after_create :send_welcome_mail, if: proc { |user| user.staff? }
 
+  scope :active, -> {where(is_active: true)}
+
   scope :patients, -> { where(role: User.roles[:patient]) }
   scope :staffmembers, -> { where(role: User.roles[:staff]) }
 

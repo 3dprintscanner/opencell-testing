@@ -13,15 +13,31 @@
         </ul>
     </div>
     <% end %>
-    <div class="form-row p-2 form-group">
-        <div class="col col-md-2 ">
-            <%= form.label :user_id, "Plating User", class: 'col-form-label' %>
+    <div class="row d-flex align-items-top">
+        <div class="col col-md-6 form-group justify-content-between">
+            <div class="row">
+                <div class="col">
+                    <%= form.label :user_id, "Plating User", class: 'col-form-label' %>
+                </div>
+                <div class="col col-md-8">
+                    <%= form.collection_select :user_id, @labgroup.users.active, :id, :email, {include_blank: true}, {class: 'was-validated form-control custom-select', required: true}  %>
+                    <div class="valid-feedback">Valid.</div>
+                    <div class="invalid-feedback">Please select the plating user.</div>
+                </div>
+            </div>
         </div>
-        <div class="col col-md-4">
-            <%= form.collection_select :user_id, User.all, :id, :email, {include_blank: true}, {class: 'was-validated form-control custom-select', required: true}  %>
-            <div class="valid-feedback">Valid.</div>
-            <div class="invalid-feedback">Please select the plating user.</div>
+        <div class="col col-md-6 justify-content-between form-group">
+            <div class="row align-items-center">
+                <div class="col bg-light p-1 text-center">
+                    <span><%= fa_icon "flask", class: "nav-icon", title: 'Lab' %></span>
+                    <%= p @lab.name %>
+                </div>
+                <div class="col">
+                    <%= link_to "Change Lab", session_labgroup_users_path, class: 'btn btn-warning', data: { confirm: 'Are you sure? Plating progress will be lost' } %>
+                </div>
+            </div>
         </div>
+        
     </div>
     <table class="table table-striped table-bordered">
         <thead class="thead-dark">

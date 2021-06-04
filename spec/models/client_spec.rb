@@ -6,6 +6,7 @@ RSpec.describe Client, type: :model do
 
     before :each do
       @labgroup = create(:labgroup)
+
     end
 
     it "should not allow a duplicate name for the same labgroup" do
@@ -136,17 +137,19 @@ RSpec.describe Client, type: :model do
       @user = create(:user)
       @labgroup = create(:labgroup)
       @client = create(:client, labgroup: @labgroup)
+      @labgroup.users << @user
+      @labgroup.save!
     end
 
     it "should generate valid stats when samples are created straight at commcomplete stage" do
       Sample.with_user(@user) do
         @sample = create(:sample, state: :tested, client: @client)
-        @plate = create(:plate, wells: build_list(:well, 96), lab: @labgroup.labs.first)
+        @plate = create(:plate, wells: build_list(:well, 96), lab: @labgroup.labs.first, user: @user)
         @plate.wells.last.tap do |w|
           w.sample = @sample
           w.save!
         end
-        @test = create(:test, plate: @plate)
+        @test = create(:test, plate: @plate, user: @user)
         @test_result = create(:test_result, well: @plate.wells.last, test: @test, state: TestResult.states[:positive])
         @sample.communicated!
         @sample.commcomplete!
@@ -173,12 +176,12 @@ RSpec.describe Client, type: :model do
         @sample.prepared!
         @sample.prepared!
         @sample.tested!
-        @plate = create(:plate, wells: build_list(:well, 96), lab: @labgroup.labs.first)
+        @plate = create(:plate, wells: build_list(:well, 96), lab: @labgroup.labs.first, user: @user)
         @plate.wells.last.tap do |w|
           w.sample = @sample
           w.save!
         end
-        @test = create(:test, plate: @plate)
+        @test = create(:test, plate: @plate, user: @user)
         @test_result = create(:test_result, well: @plate.wells.last, test: @test, state: TestResult.states[:positive])
         @sample.analysed!
         @sample.communicated!

@@ -54,7 +54,9 @@ RSpec.describe PlatesController, type: :controller do
       sign_in @user
       wells = build_list(:well, 96)
       labgroup = create(:labgroup)
-      @plate = create(:plate, wells: wells, lab: labgroup.labs.first)
+      labgroup.users << @user
+      labgroup.save!
+      @plate = create(:plate, wells: wells, lab: labgroup.labs.first, user: @user)
       session[:lab] = @plate.lab.id
       session[:labgroup] = @plate.lab.labgroups.first.id
     end
@@ -79,7 +81,9 @@ RSpec.describe PlatesController, type: :controller do
       @user = create(:user, role: User.roles[:staff]) # in factories.rb you should create a factory for user
       sign_in @user
       labgroup = create(:labgroup)
-      @plate = create(:plate, wells: build_list(:well, 96), lab: labgroup.labs.first)
+      labgroup.users << @user
+      labgroup.save!
+      @plate = create(:plate, wells: build_list(:well, 96), lab: labgroup.labs.first, user: @user)
 
       session[:lab] = @plate.lab.id
       session[:labgroup] = @plate.lab.labgroups.first.id

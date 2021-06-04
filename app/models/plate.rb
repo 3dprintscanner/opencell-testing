@@ -40,6 +40,7 @@ class Plate < ApplicationRecord
   attr_accessor :assign_error, :assign_control_error
   validates_with UniqueWellPlateValidator, on: :create
   validates_with HasOtherErrorsValidator
+  validates_with PlatelabValidator
 
   after_create :set_uid
   scope :is_preparing, -> { where(state: Plate.states[:preparing]) }
@@ -47,7 +48,7 @@ class Plate < ApplicationRecord
   scope :is_testing, -> { where(state: Plate.states[:testing]) }
   scope :is_complete, -> { where(state: Plate.states[:complete]) }
   scope :is_done, -> { where(state: Plate.states[:analysed]) }
-  scope :by_lab, ->(lab) { where(lab_id: lab.labgroups.flat_map { |g| g.labs.map(&:id) }) }
+  scope :by_lab, ->(lab) { where(lab_id: lab.id) }
 
   def self.build_plate
     plate = Plate.new

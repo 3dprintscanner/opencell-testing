@@ -80,6 +80,7 @@ GEM
       ruby2_keywords (>= 0.0.2, < 1.0)
     archive-zip (0.12.0)
       io-like (~> 0.3.0)
+    ast (2.4.2)
     autoprefixer-rails (10.2.5.0)
       execjs (< 2.8.0)
     azure-storage-blob (2.0.1)
@@ -90,8 +91,10 @@ GEM
       faraday_middleware (~> 1.0.0.rc1)
       net-http-persistent (~> 4.0)
       nokogiri (~> 1.11.0.rc2)
+    backport (1.1.2)
     barby (0.6.8)
     bcrypt (3.1.16)
+    benchmark (0.1.1)
     bindex (0.8.1)
     bootsnap (1.7.5)
       msgpack (~> 1.0)
@@ -143,6 +146,7 @@ GEM
     dotenv-rails (2.7.6)
       dotenv (= 2.7.6)
       railties (>= 3.2)
+    e2mmap (0.1.0)
     email_validator (2.2.3)
       activemodel
     erubi (1.10.0)
@@ -182,6 +186,7 @@ GEM
       railties (>= 5.2, < 6.2)
       responders (>= 2, < 4)
     io-like (0.3.1)
+    jaro_winkler (1.5.4)
     jbuilder (2.11.2)
       activesupport (>= 5.0.0)
     jquery-rails (4.4.0)
@@ -203,6 +208,10 @@ GEM
       activerecord
       kaminari-core (= 1.2.1)
     kaminari-core (1.2.1)
+    kramdown (2.3.1)
+      rexml
+    kramdown-parser-gfm (1.1.0)
+      kramdown (~> 2.0)
     listen (3.1.5)
       rb-fsevent (~> 0.9, >= 0.9.4)
       rb-inotify (~> 0.9, >= 0.9.7)
@@ -228,6 +237,9 @@ GEM
       mini_portile2 (~> 2.5.0)
       racc (~> 1.4)
     orm_adapter (0.5.0)
+    parallel (1.20.1)
+    parser (3.0.1.1)
+      ast (~> 2.4.1)
     pg (1.2.3)
     popper_js (1.16.0)
     pry (0.14.1)
@@ -271,6 +283,7 @@ GEM
       method_source
       rake (>= 0.8.7)
       thor (~> 1.0)
+    rainbow (3.0.0)
     rake (13.0.3)
     ransack (2.4.2)
       activerecord (>= 5.2.4)
@@ -286,6 +299,9 @@ GEM
     responders (3.0.1)
       actionpack (>= 5.0)
       railties (>= 5.0)
+    reverse_markdown (2.0.0)
+      nokogiri
+    rexml (3.2.5)
     rspec-core (3.10.1)
       rspec-support (~> 3.10.0)
     rspec-expectations (3.10.1)
@@ -303,8 +319,20 @@ GEM
       rspec-mocks (~> 3.10)
       rspec-support (~> 3.10)
     rspec-support (3.10.2)
+    rubocop (1.16.0)
+      parallel (~> 1.10)
+      parser (>= 3.0.0.0)
+      rainbow (>= 2.2.2, < 4.0)
+      regexp_parser (>= 1.8, < 3.0)
+      rexml
+      rubocop-ast (>= 1.7.0, < 2.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (>= 1.4.0, < 3.0)
+    rubocop-ast (1.7.0)
+      parser (>= 3.0.1.1)
     ruby-debug-ide (0.7.2)
       rake (>= 0.8.1)
+    ruby-progressbar (1.11.0)
     ruby2_keywords (0.0.4)
     ruby_dep (1.5.0)
     rubyzip (2.3.0)
@@ -338,6 +366,20 @@ GEM
       redis (>= 4.2.0)
     sidekiq_alive (2.0.6)
       sidekiq
+    solargraph (0.41.1)
+      backport (~> 1.1)
+      benchmark
+      bundler (>= 1.17.2)
+      e2mmap
+      jaro_winkler (~> 1.5)
+      kramdown (~> 2.3)
+      kramdown-parser-gfm (~> 1.1)
+      parser (~> 3.0)
+      reverse_markdown (>= 1.0.5, < 3)
+      rubocop (>= 0.52)
+      thor (~> 1.0)
+      tilt (~> 2.0)
+      yard (~> 0.9, >= 0.9.24)
     spring (2.1.1)
     spring-watcher-listen (2.0.1)
       listen (>= 2.7, < 4.0)
@@ -361,6 +403,7 @@ GEM
       tzinfo (>= 1.0.0)
     uglifier (4.2.0)
       execjs (>= 0.3.0, < 3)
+    unicode-display_width (2.0.0)
     warden (1.2.9)
       rack (>= 2.0.9)
     web-console (4.1.0)
@@ -373,6 +416,7 @@ GEM
     websocket-extensions (0.1.5)
     xpath (3.2.0)
       nokogiri (~> 1.8)
+    yard (0.9.26)
     zeitwerk (2.4.2)
 
 PLATFORMS
@@ -418,6 +462,7 @@ DEPENDENCIES
   sentry-raven
   sidekiq
   sidekiq_alive (~> 2.0)
+  solargraph
   spring
   spring-watcher-listen (~> 2.0.0)
   strong_password (~> 0.0.9)
