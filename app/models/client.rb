@@ -154,8 +154,9 @@ class Stat
     @inconclusives = args.inconclusives
     @percent_positive = args.percent_positive
     @total_tests = args.total_tests
-    @avg = args.avg
-    @min = args.min
-    @max = args.max
+    puts args.avg
+    @avg = ActiveSupport::Duration.parse(args.avg) unless args.avg.nil?
+    @min = ActiveSupport::Duration.parse(args.min) unless args.min.nil?
+    @max = ActiveSupport::Duration.parse(args.max) unless args.max.nil?
   end
 end

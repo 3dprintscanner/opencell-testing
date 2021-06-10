@@ -4,6 +4,8 @@ RSpec.describe "samples/new", type: :view do
   before :each do 
     @request.env["devise.mapping"] = Devise.mappings[:user]
     @user = create(:user, role: User.roles[:staff])
+    @labgroup = create(:labgroup, name: 'testgroup')
+    @this_client = create(:client, labgroup: @labgroup)
     @sample = Sample.new
     sign_in @user
   end

@@ -31,9 +31,9 @@
         <td><%= stat.negatives %></td>
         <td><%= stat.inconclusives %></td>
         <td><%= stat.percent_positive %></td>
-        <td><%= stat.avg %></td>
-        <td><%= stat.min %></td>
-        <td><%= stat.max %></td>
+        <td><%= Time.at(stat.avg).utc.strftime("%H:%M:%S") unless stat.avg.nil? %></td>
+        <td><%= Time.at(stat.min).utc.strftime("%H:%M:%S") unless stat.min.nil? %></td>
+        <td><%= Time.at(stat.max).utc.strftime("%H:%M:%S") unless stat.max.nil? %></td>
       </tr>
     <% end %>
     </tbody>

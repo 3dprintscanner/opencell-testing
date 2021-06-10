@@ -13,7 +13,7 @@
   <% end %>
   <div class="form-group  mb-2">
     <%= form.label :client_id, "Client" %>
-    <%= form.collection_select :client_id, Client.real, :id, :name, {}, {class: 'form-control'} %>
+    <%= form.collection_select :client_id, @labgroup.clients.real, :id, :name, {}, {class: 'form-control'} %>
   </div>
   <div class="form-group  mb-2">
     <%= form.label :uid, "UID" %>
