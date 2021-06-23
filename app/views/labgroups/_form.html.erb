@@ -20,7 +20,7 @@
   </div>
   <div class="form-group col col-sm-6">
     <%= form.label :users %>
-    <%= form.collection_select :user_ids, User.all, :id, :email, {selected: labgroup.users.map(&:id), include_blank: 'Select Users'} ,{class: 'form-control', multiple: true } %>
+    <%= form.collection_select :user_ids, User.active, :id, :email, {selected: labgroup.users.map(&:id), include_blank: 'Select Users'} ,{class: 'form-control', multiple: true } %>
   </div>
   <div class="form-group col col-sm-6">
     <%= form.label :clients %>

@@ -31,6 +31,12 @@ class User < ApplicationRecord
     samples.last
   end
 
+  def deactivate!
+    lab.destroy_all
+    is_active = false
+    save! 
+  end
+
   private
 
   def send_welcome_mail
