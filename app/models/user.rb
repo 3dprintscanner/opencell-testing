@@ -32,9 +32,8 @@ class User < ApplicationRecord
   end
 
   def deactivate!
-    lab.destroy_all
-    is_active = false
-    save! 
+    labgroups.destroy_all
+    update(is_active: false)
   end
 
   private
