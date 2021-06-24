@@ -15,26 +15,27 @@ RSpec.describe User, type: :model do
 
   it "should disassociate user from lab groups when deactivating" do
     @labgroup = create(:labgroup)
-    expect(Labgroup.all.size).to eq 1
     
     @user = create(:user, labgroups: [@labgroup])
     expect(@user.labgroups.size).to eq 1
-    @user.deactivate!
+
+    expect {
+      @user.deactivate!
+    }.to_not change(Labgroup, :count)
     
     expect(@user.is_active).to eq false
     expect(@user.labgroups.size).to eq 0
-    expect(Labgroup.find(@labgroup.id)).to_not be nil
-    expect(Labgroup.all.size).to eq 1
   end
 
   it "should not throw if the user has no associations" do
     
     @user = create(:user, labgroups: [])
-    @user.deactivate!
+    expect {
+      @user.deactivate!
+    }.to_not change(Labgroup, :count)
     
     expect(@user.is_active).to eq false
     expect(@user.labgroups.size).to eq 0
-    expect(Labgroup.all.size).to eq 0
   end
   
 end
