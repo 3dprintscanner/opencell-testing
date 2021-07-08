@@ -13,8 +13,8 @@ module PlatesHelper
           link_to"#{well.row}#{well.column}", well.sample
         end
       else
-        tag.td class: 'cell marked-cell' do
-          link_to"#{well.row}#{well.column}", well.sample
+        tag.td class: 'cell marked-cell position-relative' do
+          link_to("#{well.row}#{well.column}", well.sample) + tested_tag(well)
         end
       end
     else
@@ -64,11 +64,9 @@ module PlatesHelper
           end
         end
       else
-        tag.td class: 'cell marked-cell' do
-          link_to well.sample do
-            get_result_icon(well.test_result)
-          end
-        end
+        tag.td class: 'cell marked-cell position-relative' do
+            test_link(well) + tested_tag(well)
+          end 
       end
     else
       tag.td do
@@ -77,6 +75,17 @@ module PlatesHelper
     end
   end
 
+
+  def test_link(well)
+    link_to well.sample do
+      get_result_icon(well.test_result)
+    end
+  end
+
+  def tested_tag(well)
+    return nil unless well.sample.rerun_for?
+    content_tag(:span,"", class: 'position-absolute bg-danger triangle-element tr-align')
+  end
 
   def test_result_exists?(well)
     !well.test_result.nil? && !well.sample.nil?
