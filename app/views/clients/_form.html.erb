@@ -64,6 +64,10 @@
     <%= form.check_box :notify, class: 'form-check-input' %>
     <%= form.label :notify, "Send Results Externally", class: 'form-check-label'  %>
   </div>
+  <div class="form-check">
+    <%= form.check_box :autoretest, class: 'form-check-input' %>
+    <%= form.label :autoretest, "Automatically Retest Positives", class: 'form-check-label'  %>
+  </div>
   <div class="actions">
     <%= form.submit class: 'btn btn-primary' %>
   </div>
