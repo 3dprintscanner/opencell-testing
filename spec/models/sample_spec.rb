@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Sample, type: :model do
   describe "update model" do
+    
     before :each do
       @user = create(:user)
       @client = create(:client)
@@ -30,6 +31,25 @@ RSpec.describe Sample, type: :model do
         expect(@sample.is_retest).to eq false
         expect(@retest.is_retest).to eq true
       end
+    end
+
+    it "should not update the sample if the retest fails to create" do
+     
+      double_class = class_double(Rerun).as_stubbed_const(transfer_nested_constants: true)
+      
+      allow(double_class).to receive(:create!).and_raise("cannot create test")
+      Sample.with_user(@user) do
+        @sample = create(:sample, state: Sample.states[:tested])
+        uid = @sample.uid
+        @count = Sample.all.size
+        expect { @sample.create_retest(Rerun::INCONCLUSIVE)}.to raise_error("cannot create test")
+      end
+      @sample.reload
+      expect(double_class).to have_received(:create!)
+      expect(Sample.all.size).to eq @count
+      expect(@sample.state).to eq "tested"
+      expect(@sample.rerun).to be nil
+      expect(@sample.retest).to be nil
     end
 
     it "should not let a sample have more than one retest" do
@@ -262,6 +282,31 @@ RSpec.describe Sample, type: :model do
           @rerun = @sample.create_retest(Rerun::POSITIVE)
           expect { @rerun.create_posthoc_retest(Rerun::POSITIVE) }.to raise_error "Sample is a rerun"
         end
+      end
+
+      it "should not update the sample if the rerun creation fails" do
+        
+        double_class = class_double(Rerun).as_stubbed_const(transfer_nested_constants: true)
+      
+        allow(double_class).to receive(:create!).and_raise("posthoc retest failed")
+        
+        Sample.with_user(@user) do
+          @sample = create(:sample, state: :received, client: @client)
+          @sample.preparing!
+          @sample.preparing!
+          @sample.prepared!
+          @sample.tested!
+          @sample.analysed!
+          @sample.communicated!
+          @sample.commcomplete!
+          @count = Sample.all.size
+          expect { @sample.create_posthoc_retest(Rerun::POSITIVE) }.to raise_error("posthoc retest failed")
+        end
+        @sample.reload
+        expect(@sample.state).to eq "commcomplete"
+        expect(Sample.all.size).to eq @count
+        expect(@sample.rerun).to be nil
+
       end
 
       it "should not allow an internal rerun of a rerun" do

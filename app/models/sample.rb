@@ -118,9 +118,8 @@ class Sample < ApplicationRecord
 
     self.transaction do
       attribs = attributes.merge!(state: Sample.states[:received], is_retest: true).except!("id")
-      update(state: Sample.states[:retest])
-      Rerun.create(source_sample: self, retest_attributes: attribs, reason: reason)
-      save!
+      update!(state: Sample.states[:retest])
+      Rerun.create!(source_sample: self, retest_attributes: attribs, reason: reason)
     end
     retest
   end
@@ -140,9 +139,8 @@ class Sample < ApplicationRecord
 
     self.transaction do
       attribs = attributes.merge!(state: Sample.states[:received], is_retest: true, client_id: retest_client.id).except!("id")
-      update(state: Sample.states[:retest])
-      r = Rerun.create(source_sample: self, retest_attributes: attribs, reason: reason)
-      save!
+      update!(state: Sample.states[:retest])
+      Rerun.create!(source_sample: self, retest_attributes: attribs, reason: reason)
     end
     retest
   end

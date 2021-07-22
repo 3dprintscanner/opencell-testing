@@ -55,6 +55,16 @@
   background-color: $info;
 }
 
+.tr-align {
+  right: 5%;
+  top: 5%;
+}
+
+.triangle-element {
+  width: 75%;
+  height: 75%;
+  clip-path: polygon(50% 0%, 100% 50%, 100% 0%);
+}
 
 .object-contain{
   object-fit: contain;

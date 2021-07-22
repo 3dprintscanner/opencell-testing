@@ -16,11 +16,11 @@ class SampleDatatable < AjaxDatatablesRails::ActiveRecord
     # Declare strings in this format: ModelName.column_name
     # or in aliased_join_table.column_name format
     @view_columns ||= {
-      id: { source: "Sample.id", cond: :eq },
+      id: { source: "Sample.id", searchable: false },
       uid: { source: "Sample.uid", cond: :like },
-      state: { source: "Sample.state", cond: :like },
-      created_at: { source: "Sample.created_at" },
-      updated_at: { source: "Sample.created_at" },
+      state: { source: "Sample.state", searchable: false },
+      created_at: { source: "Sample.created_at", searchable: false },
+      updated_at: { source: "Sample.created_at", searchable: false },
       link: { source: "Sample.link", searchable: false, orderable: false }
     }
   end
