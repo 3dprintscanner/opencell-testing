@@ -10,7 +10,7 @@ Rails.application.routes.draw do
   get 'home/index', as: 'home'
   devise_for :admin_users, ActiveAdmin::Devise.config
 
-  constraints(ip: Regexp.new(ENV['PERMITTED_IP'])) do
+  constraints(ip: Regexp.new(ENV.fetch('PERMITTED_IP') {'127.0.0.1'})) do
     ActiveAdmin.routes(self) rescue ActiveAdmin::DatabaseHitDuringLoad
     mount Sidekiq::Web => '/sidekiq'
   end
@@ -49,6 +49,7 @@ Rails.application.routes.draw do
       patch 'reject'
       post 'retestpositive'
       post 'retestinconclusive'
+      post 'retestfailure'
     end
   end
 

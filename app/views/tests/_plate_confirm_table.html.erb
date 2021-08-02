@@ -55,9 +55,9 @@
         <input name="sample-id" id="sampleid" type="text" hidden>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-success" id="positiveClick">Retest Positive</button>
         <button type="button" class="btn btn-info" id="inconclusiveClick">Retest Inconclusive</button>
+        <button type="button" class="btn btn-danger" id="failureClick">Retest Failure</button>
       </div>
     </div>
   </div>
@@ -77,6 +77,8 @@ $(document).on('turbolinks:load', function() {
     modal.find('.modal-body input').val(sampleId)
     modal.find('#positiveClick').data('sample', sampleId)
     modal.find('#inconclusiveClick').data('sample', sampleId)
+    modal.find('#failureClick').data('sample', sampleId)
+    
   })
 
 
@@ -90,6 +92,13 @@ $(document).on('turbolinks:load', function() {
 
   function retestInconclusive(event){
     sendRequest('retestinconclusive').then(() => {
+      const sampleId = $(event.target).data('sample')
+      $(`.retestbutton[data-sample-id=${sampleId}]`).prop('disabled', true)
+    })
+  }
+
+  function retestFailure(event){
+    sendRequest('retestfailure').then(() => {
       const sampleId = $(event.target).data('sample')
       $(`.retestbutton[data-sample-id=${sampleId}]`).prop('disabled', true)
     })
@@ -120,6 +129,7 @@ $(document).on('turbolinks:load', function() {
 
   document.getElementById ("positiveClick").addEventListener ("click", retestPositive);
   document.getElementById ("inconclusiveClick").addEventListener ("click", retestInconclusive);
+  document.getElementById ("failureClick").addEventListener ("click", retestFailure);
 
 })
 

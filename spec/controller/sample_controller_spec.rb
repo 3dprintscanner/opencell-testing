@@ -468,6 +468,20 @@ RSpec.describe SamplesController, type: :controller do
         expect(s.retest.uid).to eq @this_sample.uid
       end
 
+      
+      it "should create a failure rerun for a sample if it does not have a rerun already" do
+        Sample.with_user(@user) do
+          @this_sample = create(:sample, state: Sample.states[:tested], client: @client)
+        end
+        post :retestfailure, params: {id: @this_sample.id }
+        expect(response).to have_http_status(:redirect)
+        s = Sample.find(@this_sample.id)
+        expect(s.state).to eq "retest"
+        expect(s.rerun.present?).to eq true
+        expect(s.rerun.reason).to eq Rerun::FAILURE
+        expect(s.retest.uid).to eq @this_sample.uid
+      end
+
       it "should not create a rerun and fail if trying to create a rerun where one already exists" do
         Sample.with_user(@user) do
           @this_sample = create(:sample, state: Sample.states[:tested], client: @client)

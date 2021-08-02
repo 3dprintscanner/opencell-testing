@@ -1,7 +1,7 @@
 class SamplesController < ApplicationController
   before_action :authenticate_user!
   # before_action :verify_labgroup
-  before_action :set_sample, only: [:show, :edit, :destroy, :receive, :prepare, :prepared, :ship, :tested, :analyze, :reject, :retestpositive, :retestinconclusive]
+  before_action :set_sample, only: [:show, :edit, :destroy, :receive, :prepare, :prepared, :ship, :tested, :analyze, :reject, :retestpositive, :retestinconclusive, :retestfailure]
   around_action :wrap_in_current_user
   after_action :verify_policy_scoped, only: [:step3_pendingprepare, :pending_plate]
   after_action :verify_authorized
@@ -72,6 +72,15 @@ class SamplesController < ApplicationController
   def retestinconclusive
     begin
       @retest = @sample.create_retest(Rerun::INCONCLUSIVE)
+      redirect_to @retest
+    rescue
+      head :bad_request
+    end
+  end
+
+  def retestfailure
+    begin
+      @retest = @sample.create_retest(Rerun::FAILURE)
       redirect_to @retest
     rescue
       head :bad_request
