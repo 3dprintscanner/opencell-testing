@@ -50,6 +50,7 @@ class TestsController < ApplicationController
     respond_to do |format|
       if @test.save
         @test.plate.complete!
+        @test.auto_retest!
         format.html { redirect_to plate_url(@test.plate), notice: 'Test was successfully created.'}
         format.json { render :show, status: :created, location: test }
       else

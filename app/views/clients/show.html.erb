@@ -10,7 +10,7 @@
                 <div class="card-body">
                     <div class="mt-1 mb-1 ">
                         <span class="profile-icon">
-                            <%= fa_icon "user" %>
+                            <%= fa_icon "user", title: 'Name' %>
                         </span>
                         <span>
                             <%= @client.name %>
@@ -18,7 +18,7 @@
                     </div>
                     <div class="mt-1 mb-1 ">
                         <span class="profile-icon">
-                            <%= fa_icon "calendar" %>
+                            <%= fa_icon "calendar", title: 'Created At' %>
                         </span>
                         <span>
                             <%= @client.created_at.strftime('%A %-d %b %H:%M') %>
@@ -26,7 +26,7 @@
                     </div>
                     <div class="mt-1 mb-1 ">
                         <span class="profile-icon">
-                            <%= fa_icon "paper-plane" %>
+                            <%= fa_icon "paper-plane", title: 'Send Result Notifications' %>
                         </span>
                         <span>
                             <% if @client.notify %>
@@ -38,7 +38,19 @@
                     </div>
                     <div class="mt-1 mb-1 ">
                         <span class="profile-icon">
-                            <%= fa_icon "desktop" %>
+                            <%= fa_icon "clipboard", title: 'Auto Retest Positives' %>
+                        </span>
+                        <span>
+                            <% if @client.autoretest %>
+                            <%= fa_icon "check" %>
+                            <% else %>
+                            <%= fa_icon "times" %>
+                            <% end %>
+                        </span>
+                    </div>
+                    <div class="mt-1 mb-1 ">
+                        <span class="profile-icon">
+                            <%= fa_icon "desktop", title: 'Notification URL' %>
                         </span>
                         <span>
                             <% if !@client.url.nil? %>
