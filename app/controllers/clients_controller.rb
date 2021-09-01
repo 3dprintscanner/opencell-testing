@@ -23,7 +23,10 @@ class ClientsController < InheritedResources::Base
   end
 
   def stats
-    @stats = resource.stats
+    stats_params = params[:search].present? ? params.require(:search).permit(:start,:end) : Hash.new
+    starts = stats_params[:start].present? ? Time.parse(stats_params[:start]) : Date.today - 1.day
+    ends = stats_params[:end].present? ? Time.parse(stats_params[:end]) : Date.today
+    @stats = resource.stats(starts, ends)
     respond_to do |format|
       format.html
       format.csv { send_data create_stats_csv(@stats.to_a), filename: "stats-client-#{resource.id}.csv" }

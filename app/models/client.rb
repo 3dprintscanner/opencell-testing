@@ -47,7 +47,9 @@ class Client < ApplicationRecord
     end
   end
 
-  def stats
+  def stats(starts, ends)
+    start_fmt = starts.strftime('%Y-%m-%d')
+    end_fmt = ends.strftime('%Y-%m-%d')
     query = <<-SQL
       select teststats.date, teststats.requested, teststats.communicated, teststats.retests, teststats.rejects, teststats.internalchecks, stat.positives, stat.negatives, stat.inconclusives, stat.percent_positive, stat.total_tests, turnaround.avg, turnaround.min, turnaround.max from
 
@@ -62,7 +64,7 @@ class Client < ApplicationRecord
       from
       
       (SELECT t.day::date as date
-      FROM   generate_series(timestamp '2020-09-11', now(), interval  '1 day') AS t(day)) as dates
+      FROM   generate_series(timestamp '#{start_fmt}', '#{end_fmt}', interval  '1 day') AS t(day)) as dates
       
       left join
       (select date(r.updated_at) as updated_at, array_agg(r.state) as states, array_agg(r.note) as notes from samples s
@@ -90,7 +92,7 @@ class Client < ApplicationRecord
       
       from 
       (SELECT t.day::date as date
-      FROM generate_series(timestamp '2020-09-11', now(), interval  '1 day') AS t(day)) as res_dates
+      FROM generate_series(timestamp '#{start_fmt}', '#{end_fmt}', interval  '1 day') AS t(day)) as res_dates
       
       left join 
       (select r.updated_at, tr.state, tr.id from samples s
@@ -115,7 +117,7 @@ class Client < ApplicationRecord
       from (
       
         (SELECT t.day::date as date
-              FROM   generate_series(timestamp '2020-09-11', now(), interval  '1 day') AS t(day)) as dates
+              FROM   generate_series(timestamp '#{start_fmt}', '#{end_fmt}', interval  '1 day') AS t(day)) as dates
         
         left join
       
@@ -154,7 +156,6 @@ class Stat
     @inconclusives = args.inconclusives
     @percent_positive = args.percent_positive
     @total_tests = args.total_tests
-    puts args.avg
     @avg = ActiveSupport::Duration.parse(args.avg) unless args.avg.nil?
     @min = ActiveSupport::Duration.parse(args.min) unless args.min.nil?
     @max = ActiveSupport::Duration.parse(args.max) unless args.max.nil?

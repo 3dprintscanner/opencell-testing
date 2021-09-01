@@ -17,6 +17,8 @@
 //= require bootstrap-select/dist/js/bootstrap-select.min.js
 //= require datatables.net/js/jquery.dataTables.min.js
 //= require datatables.net-bs4/js/dataTables.bootstrap4.min.js
+//= require daterangepicker/moment.min.js
+//= require daterangepicker/daterangepicker.js
 //= require popper
 //= require bootstrap-sprockets
 //= require rails-ujs

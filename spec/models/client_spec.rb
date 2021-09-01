@@ -153,7 +153,9 @@ RSpec.describe Client, type: :model do
         @test_result = create(:test_result, well: @plate.wells.last, test: @test, state: TestResult.states[:positive])
         @sample.communicated!
         @sample.commcomplete!
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
         expect(@stats.first.communicated).to eq 1
         expect(@stats.first.requested).to eq 0
         expect(@stats.first.retests).to eq 0
@@ -186,7 +188,9 @@ RSpec.describe Client, type: :model do
         @sample.analysed!
         @sample.communicated!
         @sample.commcomplete!
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
         expect(@stats.first.communicated).to eq 1
         expect(@stats.first.requested).to eq 1
         expect(@stats.first.retests).to eq 0
@@ -207,7 +211,9 @@ RSpec.describe Client, type: :model do
         r.save!
         @sample.preparing!
         @sample.rejected!
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
         expect(@stats.first.communicated).to eq 0
         expect(@stats.first.requested).to eq 1
         expect(@stats.first.retests).to eq 0
@@ -225,7 +231,9 @@ RSpec.describe Client, type: :model do
         r.save!
         @sample.preparing!
         @sample.retest!
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
         expect(@stats.first.communicated).to eq 0
         expect(@stats.first.requested).to eq 1
         expect(@stats.first.retests).to eq 1
@@ -241,7 +249,9 @@ RSpec.describe Client, type: :model do
         r = @sample.records.first
         r.note = 'Not Created from API'
         r.save!
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
         expect(@stats.first.communicated).to eq 0
         expect(@stats.first.requested).to eq 0
         expect(@stats.first.retests).to eq 0
@@ -267,7 +277,9 @@ RSpec.describe Client, type: :model do
         @rerun.analysed!
         @rerun.communicated!
         @rerun.commcomplete!
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
         expect(@stats.first.communicated).to eq 1
         expect(@stats.first.requested).to eq 1
         expect(@stats.first.retests).to eq 1
@@ -298,7 +310,9 @@ RSpec.describe Client, type: :model do
         @p_retest.analysed!
         @p_retest.communicated!
         @p_retest.commcomplete!
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
         expect(@stats.first.communicated).to eq 1
         expect(@stats.first.requested).to eq 1
         expect(@stats.first.retests).to eq 0
@@ -333,7 +347,9 @@ RSpec.describe Client, type: :model do
         @sample_2.tested!
         @p_2_retest = @sample_2.create_retest(Rerun::POSITIVE)
 
-        @stats = @client.stats
+        start = Date.parse('2020-09-11')
+        ends = Date.today
+        @stats = @client.stats(start,ends)
 
         expect(@stats.first.communicated).to eq 1
         expect(@stats.first.requested).to eq 2
