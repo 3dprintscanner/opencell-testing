@@ -72,6 +72,7 @@ class Client < ApplicationRecord
       where s.client_id = #{id}
       and s.uid not like '%-r'
       and r.state in(2,8,11,10)
+      and s.created_at > timestamp '#{start_fmt}'
       group by date(r.updated_at), r.sample_id
       ) as foo
       
@@ -103,6 +104,7 @@ class Client < ApplicationRecord
       and s.uid not like '%-r'
       and s.client_id = #{id}
       and r.state = 8
+      and s.created_at > timestamp '#{start_fmt}'
       ) as smp
       
       on res_dates.date = date(smp.updated_at)
@@ -128,6 +130,7 @@ class Client < ApplicationRecord
         where s.state in(8,11)
         and s.client_id = #{id}
         and rS.state isnull or rS.state = 8
+        and s.created_at > timestamp '#{start_fmt}'
         and s."control" = false) as completed
         on dates.date = completed.date
         )
