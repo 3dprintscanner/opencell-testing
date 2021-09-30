@@ -202,8 +202,9 @@ class SamplesController < ApplicationController
         plate.wells.each do |well|
           unless well.sample.nil?
             well.sample.tap do |s|
-              s.prepared!
-              s.save!
+              s.with_user(current_user) do
+                s.prepared!
+              end
             end
           end
         end
@@ -219,8 +220,9 @@ class SamplesController < ApplicationController
         plate.wells.each do | well|
           unless well.sample.nil?
             well.sample.tap do |s|
-              s.tested!
-              s.save!
+              s.with_user(current_user) do
+                s.tested!
+              end
             end
           end
         end
