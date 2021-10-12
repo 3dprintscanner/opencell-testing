@@ -199,7 +199,8 @@ GEM
       coderay (~> 1.1)
       method_source (~> 1.0)
     public_suffix (4.0.5)
-    puma (3.12.6)
+    puma (4.3.9)
+      nio4r (~> 2.0)
     pundit (2.1.0)
       activesupport (>= 3.0.0)
     rack (2.2.3)
@@ -355,7 +356,7 @@ DEPENDENCIES
   mocha
   pg
   pry
-  puma (~> 3.11)
+  puma (~> 4.3)
   pundit
   rails (~> 6.0.0)
   rails-controller-testing
