@@ -246,7 +246,8 @@ GEM
       coderay (~> 1.1)
       method_source (~> 1.0)
     public_suffix (4.0.6)
-    puma (3.12.6)
+    puma (4.3.12)
+      nio4r (~> 2.0)
     pundit (2.1.0)
       activesupport (>= 3.0.0)
     racc (1.5.2)
@@ -450,7 +451,7 @@ DEPENDENCIES
   newrelic_rpm
   pg
   pry
-  puma (~> 3.11)
+  puma (~> 4.3)
   pundit
   rails (~> 6.1.0)
   rails-controller-testing
