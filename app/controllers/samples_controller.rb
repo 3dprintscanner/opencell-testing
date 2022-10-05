@@ -1,50 +1,49 @@
-
 class SamplesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_sample, only: [:show, :edit, :destroy, :receive, :prepare, :prepared, :ship, :tested, :analyze]
+  # before_action :verify_labgroup
+  before_action :set_sample, only: [:show, :edit, :destroy, :receive, :prepare, :prepared, :ship, :tested, :analyze, :reject, :retestpositive, :retestinconclusive, :retestfailure]
   around_action :wrap_in_current_user
-  after_action :verify_policy_scoped, only: [:index, :step1_pendingdispatch, :step2_pendingreceive, :step3_pendingprepare]
+  after_action :verify_policy_scoped, only: [:step3_pendingprepare, :pending_plate]
   after_action :verify_authorized
   # GET /samples
   # GET /samples.json
   def index
-    @samples = policy_scope(Sample.all)
     authorize Sample
+    respond_to do |format|
+      format.html
+      format.json { render json: SampleDatatable.new(params, view_context: view_context, labgroup: @labgroup) }
+    end
   end
 
-  def step1_pendingdispatch
-    @samples = policy_scope(Sample.is_requested)
-    authorize Sample
-  end
-
-  def step2_pendingreceive
-    @samples = policy_scope(Sample.is_dispatched)
+  def pending_plate
+    @samples = policy_scope(Sample.labgroup(@labgroup).is_received.includes(:client).includes(rerun_for: [source_sample: [:test_result]]))
     authorize Sample
   end
 
   def step3_pendingprepare
     @plate = Plate.build_plate
-    @samples = policy_scope(Sample.is_received)
+    @samples = policy_scope(Sample.labgroup(@labgroup).includes(:client).is_received)
     authorize Sample
   end
 
   def step4_pendingreadytest
-    @plates = Plate.all.where(state: Plate.states[:preparing]).order(:updated_at)
+    @plates = Plate.by_lab(@lab).where(state: Plate.states[:preparing]).order(:updated_at)
     authorize Sample
   end
 
   def step5_pendingtest
-    @plates = Plate.all.where(state: Plate.states[:prepared]).order(:updated_at)
+    @plates = Plate.by_lab(@lab).where(state: Plate.states[:prepared]).order(:updated_at)
     authorize Sample
   end
 
   def step6_pendinganalyze
-    @plates = Plate.all.where(state: Plate.states[:testing]).order(:updated_at)
+    @plates = Plate.by_lab(@lab).where(state: Plate.states[:testing]).order(:updated_at)
     authorize Sample
   end
   # GET /samples/1
   # GET /samples/1.json
   def show
+    authorize Sample
   end
 
   # GET /samples/new
@@ -53,9 +52,66 @@ class SamplesController < ApplicationController
     authorize @sample
   end
 
+  def reject
+    @sample.with_user(current_user, &:reject!)
+    respond_to do |format|
+      format.html { redirect_to pending_plate_url, notice: 'Sample was successfully rejected.' }
+      format.json { head :accepted }
+    end
+  end
+
+  def retestpositive
+    begin
+      @retest = @sample.create_retest(Rerun::POSITIVE)
+      redirect_to @retest
+    rescue
+      head :bad_request
+    end
+  end
+
+  def retestinconclusive
+    begin
+      @retest = @sample.create_retest(Rerun::INCONCLUSIVE)
+      redirect_to @retest
+    rescue
+      head :bad_request
+    end
+  end
+
+  def retestfailure
+    begin
+      @retest = @sample.create_retest(Rerun::FAILURE)
+      redirect_to @retest
+    rescue
+      head :bad_request
+    end
+  end
+
+  def new_retest
+    authorize Sample
+    @retest_samples = Sample.all.where(state: Sample.states[:commcomplete]).where(is_retest: false).where("samples.updated_at >= ?", 2.days.ago.beginning_of_day)
+    @reasons = Rerun::REASONS
+    @query_sample = Sample.find(params[:query]) if params[:query]
+  end
+
+  def retest_after
+    authorize Sample
+    begin
+      @sample = Sample.find(retest_params[:id])
+      @retest = @sample.create_posthoc_retest(retest_params[:reason])
+      respond_to do |format|
+        format.html { redirect_to sample_url(@retest.id), notice: 'Retest successfully created' }
+      end
+    rescue => exception
+      respond_to do |format|
+        format.html { redirect_to new_retest_url, alert: 'Retest could not be created' }
+      end
+    end
+  end
+
   def dashboard
     authorize Sample
-    @samples = Sample.all
+    @samples = Sample.includes(:client).all
     @tested_last_week = Sample.tested_last_week
     @requested_last_week = Sample.requested_last_week
     @failure_rate_last_week = Sample.failure_rate_last_week
@@ -65,6 +121,7 @@ class SamplesController < ApplicationController
   # DELETE /samples/1
   # DELETE /samples/1.json
   def destroy
+    authorize @sample
     @sample.destroy
     respond_to do |format|
       format.html { redirect_to samples_url, notice: 'Sample was successfully destroyed.' }
@@ -73,10 +130,10 @@ class SamplesController < ApplicationController
   end
 
   def create
-    @sample = authorize Sample.new(user_id: params[:sample][:user_id], state: Sample.states[:requested])
+    @sample = authorize Sample.new(sample_params.merge!(state: Sample.states[:received]))
     respond_to do |format|
       if @sample.save
-        format.html { redirect_to user_path(@sample.user), notice: 'Sample was successfully created.' }
+        format.html { redirect_to @sample, notice: 'Sample was successfully created.' }
         format.json { render :show, status: :created, location: @sample }
       else
         format.html { render :new }
@@ -85,29 +142,26 @@ class SamplesController < ApplicationController
     end
   end
 
-  def step1_bulkdispatched
-    authorize Sample
-    bulk_action(Sample.states[:dispatched], step2_pendingreceive_path)
-  end
-
-  def step2_bulkreceived
-    authorize Sample
-    bulk_action(Sample.states[:received], step3_pendingprepare_path)
-  end
-
-
   def step3_bulkprepared
     authorize Sample
-    plate_params = get_bulk_plate
-    @plate = Plate.new(plate_params).assign_samples(get_mappings)
-    respond_to do |format|
-      if @plate.save
-        format.html { redirect_to step4_pendingreadytest_path, notice: "Samples have been successfully plated" }
-        format.json { render :show, status: :created, location: @plate }
-      else
-        format.html { redirect_to step3_pendingprepare_path, status: :unprocessable_entity, alert: "Could not process plate" }
+    @plate = Plate.new(plate_params.merge!(lab_id: session[:lab]))
+    begin
+      @plate.transaction do
+        @plate.assign_samples(get_mappings)
+        @plate.save!
+      end
+    rescue ActiveRecord::RecordInvalid => e
+      Rails.logger.error("Request failed with exception #{e}")
+      respond_to do |format|
+        flash.now[:alert] = "Could not process plate"
+        format.html { render :step3_pendingprepare, alert: "Could not process plate" }
         format.json { render json: @plate.errors, status: :unprocessable_entity }
       end
+      return
+    end
+    respond_to do |format|
+      format.html { redirect_to step4_pendingreadytest_path, notice: "Samples have been successfully plated" }
+      format.json { render :show, status: :created, location: @plate }
     end
   end
 
@@ -148,8 +202,9 @@ class SamplesController < ApplicationController
         plate.wells.each do |well|
           unless well.sample.nil?
             well.sample.tap do |s|
-              s.prepared!
-              s.save!
+              s.with_user(current_user) do
+                s.prepared!
+              end
             end
           end
         end
@@ -165,8 +220,9 @@ class SamplesController < ApplicationController
         plate.wells.each do | well|
           unless well.sample.nil?
             well.sample.tap do |s|
-              s.tested!
-              s.save!
+              s.with_user(current_user) do
+                s.tested!
+              end
             end
           end
         end
@@ -192,7 +248,7 @@ class SamplesController < ApplicationController
       end
     rescue ActiveRecord::RecordInvalid => e
       respond_to do |format|
-        format.html { render :step1_pendingdispatch, alert: e.message, status: :unprocessable_entity }
+        format.html { redirect request.referrer, alert: e.message, status: :unprocessable_entity }
         format.json { render json: e.errors, status: :unprocessable_entity }
       end
       return
@@ -202,43 +258,49 @@ class SamplesController < ApplicationController
     end
   end
 
-
   def set_sample
-    @sample = authorize Sample.find(params[:id])
+    @sample = authorize Sample.includes(:client, records: [:user]).find(params[:id])
   end
 
     # Only allow a list of trusted parameters through.
   def sample_params
-    params.require(:sample).permit(:user_id, :state, :note)
+    params.require(:sample).permit(:client_id, :state, :uid)
+  end
+
+  def retest_params
+    params.require(:sample).permit(:reason, :id)
   end
 
   def get_samples
     params.permit(:samples).each do |s|
-      s.permit(:id, :note)
+      s.permit(:id)
     end
     entries = params.dig(:samples)
     if entries
-      @samples = entries.select {|e| !(e[:id].nil? || e[:note].nil?)}.map {|id| {sample: Sample.find(id[:id]), note: id[:note]}}
+      @samples = entries.select {|e| !(e[:id].nil?)}.map {|id| {sample: Sample.find(id[:id])}}
     else
       []
     end
   end
 
-   def get_plates
-     params.permit(:plates).each do |s|
-       s.permit(:id)
-     end
+  def get_plates
+    params.permit(:plates).each do |s|
+      s.permit(:id)
+    end
+    plates = params.dig(:plates)
+    return nil unless plates&.any?
 
-     plates = params.dig(:plates)
-     return nil unless plates&.any?
-     return  plates.map {|plate| Plate.find(plate[:id])}
-   end
+    return plates.map {|plate| Plate.find(plate[:id])}
 
-  def get_bulk_plate
-    params.require(:plate).permit(wells_attributes:[:id, :row, :column ])
+  end
+
+  def plate_params
+    params.require(:plate).permit(:user_id, wells_attributes:[:id, :row, :column ])
   end
   def get_mappings
-    params.require(:sample_well_mapping).permit(mappings:[:id,:row, :column])[:mappings]
+    params.require(:sample_well_mapping).permit(mappings:[:id,:row, :column, :control, :control_code])[:mappings]
   end
+
+
 
 end

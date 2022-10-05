@@ -1,5 +1,7 @@
 
 class UsersController < ApplicationController
+  skip_before_action :verify_labgroup, only: [:session_labgroup, :session_labgroup_set, :session_lab, :session_lab_set]
+  skip_before_action :set_state_quantities, only: [:session_labgroup, :session_labgroup_set, :session_lab, :session_lab_set]
   before_action :set_user, only: [:show, :edit, :destroy]
   before_action :authenticate_user!
   after_action :verify_authorized
@@ -23,16 +25,48 @@ class UsersController < ApplicationController
   def patient_created
   end 
 
+  def session_labgroup
+    authorize current_user
+    @session_location = { labgroup: session[:labgroup]}
+  end
+
+  def session_labgroup_set
+    authorize current_user
+    p = params.require(:ss).permit(:labgroup)
+    puts p
+    unless Labgroup.find(p[:labgroup])
+      raise "cannot invalid labgroup"
+    end
+    session[:labgroup] = p[:labgroup]
+
+    redirect_to session_lab_users_path
+  end
+
+  def session_lab
+    authorize current_user
+    @session_location = { labgroup: session[:labgroup], lab: session[:lab] }
+  end
+
+  def session_lab_set
+    authorize current_user
+    p = params.require(:ss).permit(:lab)
+    puts p
+    unless Labgroup.find(session[:labgroup]).labs.includes(Lab.find(p[:lab]))
+      raise "cannot reconcile lab with group"
+    end
+    session[:lab] = p[:lab]
+
+    redirect_to staff_dashboard_path
+  end
 
   def create_staff
     authorize User
-    generated_password = Devise.friendly_token.first(8)
-    @api_key = User.roles[user_params[:role]] == User.roles[:staff] ? nil : SecureRandom.base64(16)
-    @user = User.new(user_params.merge!({password: generated_password, password_confirmation: generated_password, api_key: @api_key}))
+    generated_password = Devise.friendly_token.first(12)
+    @user = User.new(user_params.merge!({password: generated_password, password_confirmation: generated_password}))
     respond_to do |format|
       if @user.save
         if @user.patient?
-          format.html { render :patient_created, notice: 'Patient was successfully created.' }
+          format.html { redirect_to @user, notice: 'Patient was successfully created.' }
           format.json { render :show, status: :created, location: @user }
         else
           UserMailer.with(user: @user).staff_created_user.deliver_now
@@ -49,7 +83,7 @@ class UsersController < ApplicationController
   # DELETE /users/1
   # DELETE /users/1.json
   def destroy
-    @user.destroy
+    @user.deactivate!
     respond_to do |format|
       format.html { redirect_to root_url, notice: 'User was successfully destroyed.' }
       format.json { head :no_content }
@@ -59,11 +93,11 @@ class UsersController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_user
-      @user =  authorize User.find(params[:id])
+      @user = authorize User.find(params[:id])
     end
 
     # Only allow a list of trusted parameters through.
     def user_params
-      params.require(:user).permit(:name, :dob, :telno, :email, :role)
+      params.require(:user).permit(:email, :role, :security_question_answer, :security_question_id)
     end
 end

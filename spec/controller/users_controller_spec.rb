@@ -30,6 +30,9 @@ RSpec.describe UsersController, type: :controller do
       @request.env["devise.mapping"] = Devise.mappings[:user]
       @user = create(:user, role: User.roles[:patient]) # in factories.rb you should create a factory for user
       @other_user = create(:user, role: User.roles[:patient])
+      @labgroup = create(:labgroup)
+      session[:labgroup] = @labgroup.id
+      session[:lab] = @labgroup.labs.first.id
       sign_in @user
     end
 
@@ -89,6 +92,9 @@ RSpec.describe UsersController, type: :controller do
       @user = create(:user, :staff) # in factories.rb you should create a factory for user
       @other_user = create(:user, :patient)
       @to_create_user = build(:user, :patient)
+      @labgroup = create(:labgroup)
+      session[:labgroup] = @labgroup.id
+      session[:lab] = @labgroup.labs.first.id
       sign_in @user
     end
 
@@ -116,9 +122,9 @@ RSpec.describe UsersController, type: :controller do
       expect(response).to have_http_status(:success)
     end
 
-    it "should let a staff member create a user via the staff routeroutes to #create_staff" do
+    it "should let a staff member create a patient via the staff routeroutes to #create_staff" do
       post :create_staff, params: {user: @to_create_user.attributes}
-      expect(response).to have_http_status(:success)
+      expect(response).to have_http_status(:redirect)
       expect(User.last.email).to eq(@to_create_user.email)
     end
 
@@ -126,7 +132,6 @@ RSpec.describe UsersController, type: :controller do
       post :create_staff, params: {user: @to_create_user.attributes.merge({role: 'staff'})}
       expect(response).to have_http_status(:redirect)
       expect(User.last.email).to eq(@to_create_user.email)
-      expect(User.last.api_key).to be_nil
       expect(response).to redirect_to(user_path(User.last))
     end
 

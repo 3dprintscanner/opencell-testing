@@ -1,14 +1,13 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.7.1'
+ruby '2.7.3'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.0.0'
+gem 'rails', '~> 6.1.0'
 # Use sqlite3 as the database for Active Record
-gem 'bootstrap'
+gem 'bootstrap', '~> 4.5'
 gem 'activeadmin'
-gem 'jquery-rails'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
 gem 'pg'
@@ -32,13 +31,15 @@ gem 'jbuilder', '~> 2.5'
 
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
+gem "azure-storage-blob", require: false
 gem 'devise'
+gem 'barby'
+gem 'chunky_png'
 gem 'email_validator'
 gem 'pundit'
-gem 'rqrcode'
-gem 'jquery-ui-rails'
 gem "sentry-raven"
 gem "font-awesome-rails"
+gem 'newrelic_rpm'
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
 
@@ -58,6 +59,8 @@ group :development do
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
   gem 'pry'
+  gem 'solargraph'
+  gem 'rubocop'
 end
 
 
@@ -68,6 +71,7 @@ group :development, :test do
   gem 'rails-controller-testing'
   gem 'ruby-debug-ide'
   gem 'debase'
+  gem 'dotenv-rails'
 end
 
 group :test do
@@ -79,4 +83,16 @@ group :test do
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+gem 'tzinfo-data'
+
+gem "clamby", "~> 1.6"
+gem 'activestorage-validator'
+gem "strong_password", "~> 0.0.9"
+gem "json-schema", "~> 2.8"
+gem "devise-security", "~> 0.14.3"
+gem "recaptcha"
+gem "sidekiq"
+
+gem "sidekiq_alive", "~> 2.0"
+
+gem "ajax-datatables-rails", "~> 1.3"

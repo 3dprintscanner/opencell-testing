@@ -13,15 +13,11 @@ class SamplePolicy < ApplicationPolicy
     staffmember?
   end
 
-  def step1_pendingdispatch?
-    staffmember?
-  end
-
-  def step2_pendingreceive?
-    staffmember?
-  end
-
   def step3_pendingprepare?
+    staffmember?
+  end
+
+  def pending_plate?
     staffmember?
   end
 
@@ -45,12 +41,19 @@ class SamplePolicy < ApplicationPolicy
     staffmember?
   end
 
+  def new_retest?
+    staffmember?
+  end
+  
+  def retest_after?
+    staffmember?
+  end
   def edit?
     staffmember?
   end
 
   def create?
-    staffmember? || @record.user == @user
+    staffmember?
   end
 
   def update?
@@ -60,12 +63,20 @@ class SamplePolicy < ApplicationPolicy
   def destroy?
     staffmember?
   end
-
-  def step1_bulkdispatched?
+  
+  def reject?
     staffmember?
   end
 
-  def step2_bulkreceived?
+  def retestpositive?
+    staffmember?
+  end
+
+  def retestinconclusive?
+    staffmember?
+  end
+
+  def retestfailure?
     staffmember?
   end
 

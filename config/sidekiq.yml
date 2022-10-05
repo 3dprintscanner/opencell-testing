@@ -1,0 +1,6 @@
+:concurrency: 5
+:pidfile: ./tmp/pids/server.pid
+:logfile: ./log/sidekiq.log
+:queues:
+  - default
+:daemon: true

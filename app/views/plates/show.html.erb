@@ -1,13 +1,10 @@
-<div class="container">
-
-  <br/>
-
+<div class="container mt-4">
   <div class="row">
     <div class="col col-lg-8 col-md-12 mb-2">
       <% unless @plate.test.nil? %>
-        <%= render partial: 'after_test' %>
+        <%= render partial: 'plate_matrix', locals: {title: "Test Results", cell_function: -> (w) {generate_test_cell(w)}} %>
       <% else %>
-        <%= render partial: 'before_test' %>
+        <%= render partial: 'plate_matrix', locals: {title: "Sample Plating", cell_function: -> (w) {generate_well_cell(w)}} %>
       <% end  %>
     </div>
     <div class="col col-lg-4 col-md-6 ml-md-auto mr-md-auto">
@@ -16,11 +13,11 @@
             <h3>Plate #<%= @plate.id %> </h3>
           </div>
           <div class="card-body">
-            <%= image_tag @plate.qr_code.to_data_url, class: 'img-thumbnail object-contain' %>
+            <%= image_tag @plate.barcode, class: 'img-thumbnail object-contain' %>
             <div class="p-1">
               <div class="mt-1 mb-1">
                 <span >
-                  <%= fa_icon "hashtag", class: 'fa-fw' %>
+                  <%= fa_icon "hashtag", class: 'fa-fw', title: 'ID' %>
                 </span>
                 <span>
                   <small><%= @plate.uid %></small>
@@ -28,7 +25,25 @@
               </div>
               <div class="mt-1 mb-1">
                 <span >
-                  <%= fa_icon "clock-o", class: 'fa-fw' %>
+                  <%= fa_icon "flask", class: 'fa-fw', title: 'Lab' %>
+                </span>
+                <span>
+                  <small><%= link_to @plate.lab.name, @plate.lab %></small>
+                </span>
+              </div>
+              <% if @plate.user %>
+              <div class="mt-1 mb-1">
+                <span >
+                  <%= fa_icon "user", class: 'fa-fw', title: 'User' %>
+                </span>
+                <span>
+                  <small><%= link_to @plate.user.email, @plate.user %></small>
+                </span>
+              </div>
+              <% end %>
+              <div class="mt-1 mb-1">
+                <span >
+                  <%= fa_icon "clock-o", class: 'fa-fw', title: 'Created At' %>
                 </span>
                 <span>
                   <small><%= @plate.created_at.strftime('%A %-d %b %H:%M') %></small>
@@ -36,21 +51,39 @@
               </div>
               <div class="mt-1 mb-1">
                 <span >
-                  <%= fa_icon "magic", class: 'fa-fw' %>
+                  <%= fa_icon "magic", class: 'fa-fw', title: 'Status' %>
                 </span>
                 <span>
                   <small><%= get_plate_badge(@plate.state) %></small>
                 </span>
               </div>
+              <% if @plate.test.present? %>
+              <div class="mt-1 mb-1">
+                <span >
+                  <%= fa_icon "archive", class: 'fa-fw', title: 'Batch Number' %>
+                </span>
+                <span>
+                  <small><%= @plate.test.batch %></small>
+                </span>
+              </div>
+              <div class="mt-1 mb-1">
+                <span >
+                  <%= fa_icon "flask", class: 'fa-fw', title: 'Westgard Results' %>
+                </span>
+                <span>
+                  <small><%= westgard_link(@plate) %></small>
+                </span>
+              </div>
+              <% end %>
             </div>
           </div>
           <div class="card-footer">
-            <%= link_to 'Edit', edit_plate_path(@plate), class: 'btn btn-outline-info mr-2' %>
+            <% if @plate.test.present? && @plate.test.result_file.present? %>
+              <%= link_to 'Download Results', rails_blob_path(@plate.test.result_file, disposition: "attachment"), class: 'btn btn-primary btn-sm' %>
+            <% end %>
             <%= link_to 'Back', plates_path %>
           </div>
         </div>
     </div>
   </div>
-  <br/>
-
 </div>

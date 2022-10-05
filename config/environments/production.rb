@@ -14,7 +14,6 @@ Rails.application.configure do
   config.consider_all_requests_local       = false
   config.action_controller.perform_caching = true
 
-  config.email_test_results = false
   # Ensures that a master key has been made available in either ENV["RAILS_MASTER_KEY"]
   # or in config/master.key. This key is used to decrypt credentials (and other encrypted files).
   # config.require_master_key = true
@@ -39,7 +38,7 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = 'X-Accel-Redirect' # for NGINX
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  config.active_storage.service = :microsoft
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
@@ -47,7 +46,7 @@ Rails.application.configure do
   # config.action_cable.allowed_request_origins = [ 'http://example.com', /http:\/\/example.*/ ]
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = true
 
   # Use the lowest log level to ensure availability of diagnostic information
   # when problems arise.
@@ -60,11 +59,11 @@ Rails.application.configure do
   # config.cache_store = :mem_cache_store
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
-  # config.active_job.queue_adapter     = :resque
+  config.active_job.queue_adapter = :sidekiq
   # config.active_job.queue_name_prefix = "opencell_testing_production"
 
   config.action_mailer.perform_caching = false
-  config.action_mailer.default_url_options = { :host => 'https://opencell-lims-docker.azurewebsites.net' }
+  config.action_mailer.default_url_options = { host: ENV.fetch("CURRENT_DOMAIN") {'https://opencell-lims-docker.azurewebsites.net'} }
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
@@ -92,7 +91,9 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-  config.hosts << "opencell-lims-docker.azurewebsites.net"
+  config.hosts << 'opencell-lims-docker.azurewebsites.net'
+  config.hosts << 'lims-dev.sudo.bio'
+  config.hosts << 'opencell-lims.azurewebsites.net'
 
   # Inserts middleware to perform automatic connection switching.
   # The `database_selector` hash is used to pass options to the DatabaseSelector

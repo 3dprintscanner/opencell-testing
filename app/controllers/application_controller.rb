@@ -1,25 +1,48 @@
 class ApplicationController < ActionController::Base
   include Pundit
-  before_action :set_state_quantities
+  before_action :verify_labgroup, if: :user_signed_in?
+  before_action :set_state_quantities, if: :user_signed_in?
   before_action :set_raven_context
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
-  protected
-
-  def set_state_quantities
-    @pendingdispatch_count = Sample.is_requested.size
-    @pendingreceive_count = Sample.is_dispatched.size
-    @pendingprepare_count = Sample.is_received.size
-    @pendingreadytest_count = Plate.is_preparing.size
-    @pendingtest_count = Plate.is_prepared.size
-    @pendinganalyze_count = Plate.is_testing.size
-    @completed_tests_count = Plate.is_complete.size
-    @done_tests_count = Plate.is_done.size
+  def after_sign_in_path_for(resource)
+    session_labgroup_users_path
   end
 
-
   protected
+
+  def verify_labgroup
+    return if !user_signed_in?
+    unless session[:labgroup] && session[:lab]
+      flash[:alert] = "Please set a lab group"
+      redirect_to session_labgroup_users_path
+      return
+    end
+    #check the session labgroup and find the lab
+    @labgroup = Labgroup.find(session[:labgroup])
+    @lab = @labgroup.labs.find_by_id(session[:lab])
+    unless @lab
+      flash[:alert] = "Lab not member of labgroup"
+      redirect_to session_labgroup_users_path
+      return
+    end
+  end
+
+  def set_state_quantities
+
+    unless request.format.json?
+      sample_groups = Sample.by_lab(@lab).group(:state).count
+      plate_groups = Plate.by_lab(@lab).group(:state).count
+      @pendingprepare_count = sample_groups[:received.to_s] || 0
+      @pendingreadytest_count = plate_groups[:preparing.to_s] || 0
+      @pendingtest_count = plate_groups[:prepared.to_s] || 0
+      @pendinganalyze_count = plate_groups[:testing.to_s] || 0
+      @completed_tests_count = plate_groups[:complete.to_s] || 0
+      @done_tests_count = plate_groups[:analysed.to_s] || 0
+    end
+  end
+
   def wrap_in_current_user
     Sample.with_user(current_user) do
       yield

@@ -1,0 +1,37 @@
+version: '3'
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    command: redis-server
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: 
+      DISABLE_SIDEKIQ_ALIVE: 'true'
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: 
+      SIDEKIQ_ALIVE_PORT: 1234
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec sidekiq -C config/sidekiq.yml"
+    ports:
+      - "1234:1234"
+    depends_on:
+      - db
+      - redis

@@ -1,0 +1,61 @@
+<div class="container">
+  <div class="card shadow-sm">
+      <div class="card-header">
+        <h2>Samples to Plate</h2>
+      </div>
+      <div class="card-body table-responsive">
+        <table id="datatable" class="table table-striped table-bordered">
+          <thead class="thead-dark">
+          <tr>
+            <th>UID</th>
+            <th>Sample</th>
+            <th>Client</th>
+            <th width="25">Rerun</th>
+            <th>Elapsed</th>
+            <th colspan="1">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <% @samples.each do |sample| %>
+            <tr>
+              <td><%= sample.uid %></td>
+              <td class="text-left">
+                <%= link_to sample do  %>
+                  <%= tag.button class:'btn btn-sm btn-outline-primary' do %>
+                    <%= "Show Sample ##{sample.id}" %>
+                  <% end   %>
+                <% end  %>
+              </td>
+              <td class="text-left">
+                <%= link_to sample.client do  %>
+                  <%= tag.button class: 'btn btn-sm btn-outline-primary' do %>
+                    <%= sample.client.name %>
+                  <% end  %>
+                <% end  %>
+              </td>
+              <td>
+                <% if sample.is_retest %>
+                  <%= get_result_icon(sample.rerun_for.source_sample.test_result) %>
+                  <p hidden>true</p>
+                <% else %>
+                  <%= fa_icon "times" %>
+                  <p hidden>false</p>
+                <% end %>
+              </td>
+              <td>
+                <%= "#{get_elapsed_hours(sample)} Hours" %>
+              </td>
+              <td>
+                <%= link_to reject_sample_path(sample), method: :patch, data: {confirm: "Reject sample #{sample.uid} and request reswab?"} do  %>
+                  <%= tag.button class: 'btn btn-sm btn-danger' do %>
+                    Reject <%= fa_icon "warning" %>
+                  <% end  %>
+                <% end  %>
+              </td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+  </div>
+</div>

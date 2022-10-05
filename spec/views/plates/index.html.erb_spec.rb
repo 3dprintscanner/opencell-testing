@@ -3,7 +3,11 @@ require 'rails_helper'
 RSpec.describe "plates/index", type: :view do
   before(:each) do
     wells = build_list(:well, 96)
-    @plate = create(:plate, wells: wells )
+    @lab = create(:lab, labgroups: [create(:labgroup)])
+    @user = create(:user)
+    @lab.labgroups.first.users << @user
+    @lab.labgroups.first.save!
+    @plate = create(:plate, wells: wells, lab:@lab, user: @user)
     assign(:plates, [
       @plate
     ])

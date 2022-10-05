@@ -1,0 +1,89 @@
+<div class="container">
+  <%= tag.h1 "Stats for #{resource.name}" %>
+  <%= form_for(:search, class: 'form-inline', url: stats_client_path, method: :get) do |form| %>
+    <div class="form-group row">
+      <div class="col">
+        <div class="row">
+          <%= form.label :date, class: 'col-form-label col-sm-2' %>
+          <div class="col-sm-10">
+            <%= form.text_field :date, class: 'form-control' %>
+            <%= form.hidden_field :start %>
+            <%= form.hidden_field :end %>
+          </div>          
+        </div>
+      </div>
+      <div class="col">
+        <%= form.submit "Search", class: 'btn btn-primary' %>
+      </div>
+    </div>    
+  <% end %>
+  <table id="clienttable" class="table table-striped table-bordered">
+    <thead class="thead-dark">
+    <tr>
+        <th>Date</th>
+        <th>Requested</th>
+        <th>Communicated</th>
+        <th>Retests</th>
+        <th>Rejected</th>
+        <th>Internal Checks</th>
+        <th>Positives</th>
+        <th>Negatives</th>
+        <th>Inconclusives</th>
+        <th>Percent Positive</th>
+        <th>Avg</th>
+        <th>Min</th>
+        <th>Max</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% @stats.each do |stat| %>
+      <tr>
+        <td ><%= stat.date %></td>
+        <td><%= stat.requested %></td>
+        <td><%= stat.communicated %></td>
+        <td><%= stat.retests %></td>
+        <td><%= stat.rejects %></td>
+        <td><%= stat.internalchecks %></td>
+        <td><%= stat.positives %></td>
+        <td><%= stat.negatives %></td>
+        <td><%= stat.inconclusives %></td>
+        <td><%= stat.percent_positive %></td>
+        <td><%= Time.at(stat.avg).utc.strftime("%H:%M:%S") unless stat.avg.nil? %></td>
+        <td><%= Time.at(stat.min).utc.strftime("%H:%M:%S") unless stat.min.nil? %></td>
+        <td><%= Time.at(stat.max).utc.strftime("%H:%M:%S") unless stat.max.nil? %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+  <%= link_to "Download CSV", stats_client_path(resource, format: :csv), {'data-turbolinks': false}  %>
+  <br/>
+  <%= link_to "Download JSON", stats_client_path(resource, format: :json), {'data-turbolinks': false}  %>
+  <br/>
+  <%= link_to 'Back', client_path(resource) %>
+</div>
+
+
+<script>
+$(function() {
+  $('input[name="search[date]"]').daterangepicker({
+    opens: 'left',
+  }, function(start, end, label) {
+    $('input[name="search[start]"]').val(start)
+    $('input[name="search[end]"]').val(end)
+  });
+  const p = new URLSearchParams(location.search)
+  const date = p.get('search[date]')
+  const start = p.get('search[date]')
+  const end = p.get('search[date]')
+  if(date){
+    $('input[name="search[date]"]').val(date)
+  }
+  if(start){
+    $('input[name="search[start]"]').val(start)
+  }
+  if(end){
+    $('input[name="search[end]"]').val(end)
+  }
+
+});
+</script>

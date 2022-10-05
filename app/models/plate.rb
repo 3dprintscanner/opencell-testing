@@ -2,10 +2,10 @@ class UniqueWellPlateValidator < ActiveModel::Validator
 
   def validate(record)
     if record.wells.group_by { |w| [w.row, w.column] }.any? { |_, group| group.size != 1 }
-      record.errors[:wells] << "Duplicate Well Found"
+      record.errors.add(:wells, "Duplicate Well Found")
     end
     if record.wells.select {|x| x.sample_id != nil}.group_by { |w| w.sample_id }.any? { |_, group| group.size != 1 }
-      record.errors[:plate] << "Duplicate Sample In plate Found"
+      record.errors.add(:plate, "Duplicate Sample In plate Found")
     end
   end
 end
@@ -13,35 +13,42 @@ end
 class HasOtherErrorsValidator < ActiveModel::Validator
 
   def validate(record)
-     if record.assign_error == true
-        record.errors[:wells] << "Illegal Well Reference"
-     end
+    if record.assign_error == true
+      record.errors.add(:wells, 'Illegal Well Reference')
+    end
+
+    if record.assign_control_error == true
+      record.errors.add(:controls, 'Control not checked')
+    end
+
   end
 end
 
 class Plate < ApplicationRecord
 
-  extend QrModule
+  extend BarcodeModule
 
   has_many :wells, dependent: :destroy
   has_many :samples, through: :wells
+  belongs_to :lab
   has_one :test, dependent: :destroy
+  belongs_to :user
   accepts_nested_attributes_for :wells
-  enum state: %i[preparing prepared testing complete analysed]
-  validates :wells, length: {maximum: 96, minimum: 96}
-  qr_for :uid
-  attr_accessor :assign_error
+  enum state: { preparing: 0, prepared: 1, testing: 2, complete: 3, analysed: 4 }
+  validates :wells, length: { maximum: 96, minimum: 96 }
+  barcode_for :uid
+  attr_accessor :assign_error, :assign_control_error
   validates_with UniqueWellPlateValidator, on: :create
   validates_with HasOtherErrorsValidator
+  validates_with PlatelabValidator
 
-
-  before_create :set_uid
-  scope :is_preparing, -> {where(state: Plate.states[:preparing])}
-  scope :is_prepared, -> {where(state: Plate.states[:prepared])}
-  scope :is_testing, -> {where(state: Plate.states[:testing])}
-  scope :is_complete, -> {where(state: Plate.states[:complete])}
-  scope :is_done, -> {where(state: Plate.states[:analysed])}
-
+  after_create :set_uid
+  scope :is_preparing, -> { where(state: Plate.states[:preparing]) }
+  scope :is_prepared, -> { where(state: Plate.states[:prepared]) }
+  scope :is_testing, -> { where(state: Plate.states[:testing]) }
+  scope :is_complete, -> { where(state: Plate.states[:complete]) }
+  scope :is_done, -> { where(state: Plate.states[:analysed]) }
+  scope :by_lab, ->(lab) { where(lab_id: lab.id) }
 
   def self.build_plate
     plate = Plate.new
@@ -56,16 +63,35 @@ class Plate < ApplicationRecord
   end
 
   def set_uid
-    self.uid = SecureRandom.uuid
+    update(uid: "#{Date.today}-#{id}")
   end
 
   def assign_samples(sample_mappings)
-    sample_mappings.reject { |swm| swm[:id].blank? }.each do |mapping|
-      sample = Sample.find(mapping[:id])
+    sample_mappings.reject { |swm| swm[:id].blank? && ActiveModel::Type::Boolean.new.cast(swm[:control]) == false }.each do |mapping|
+
       well = wells.find { |w| w[:column] == mapping[:column].to_i && w[:row] == mapping[:row]}
       if (well.nil?)
         @assign_error = true
         break
+      end
+
+      if PlateHelper.negative_extraction_controls.include?({row: well[:row], col: well[:column].to_i})
+        if mapping[:control_code].to_i != Sample::CONTROL_CODE
+          @assign_control_error = true
+          break
+        end
+
+        sample = Sample.create!(client: Client.control_client(lab.main_labgroup), state: Sample.states[:preparing], control: true)
+      elsif PlateHelper.positive_control_positions.include?({row: well[:row], col: well[:column].to_i})
+        if mapping[:control_code].to_i != Sample::POSITIVE_CONTROL_CODE
+          @assign_control_error = true
+          break
+        end
+        sample = Sample.create!(client: Client.control_client(lab.main_labgroup), state: Sample.states[:preparing], control: true)
+      elsif PlateHelper.auto_control_positions.include?({row: well[:row], col: well[:column].to_i})
+        sample = Sample.create!(client: Client.control_client(lab.main_labgroup), state: Sample.states[:preparing], control: true)
+      else
+        sample = Sample.find(mapping[:id])
       end
 
       well.sample = sample
@@ -83,7 +109,6 @@ class Plate < ApplicationRecord
       end
     end
   end
-
 end
 
 module PlateHelper
@@ -96,5 +121,21 @@ module PlateHelper
 
   def self.rows
     @@rows
+  end
+
+  def self.negative_extraction_controls
+    [{ row: 'H', col: 1 }, { row: 'D', col: 6 }, { row: 'E', col: 6 }, { row: 'E', col: 12 }]
+  end
+
+  def self.auto_control_positions
+    [{ row: 'F', col: 12 }, { row: 'G', col: 12 }, { row: 'H', col: 12 }]
+  end
+
+  def self.positive_control_positions
+    [{ row: 'A', col: 1 }]
+  end
+
+  def self.control_positions
+    negative_extraction_controls + auto_control_positions + positive_control_positions
   end
 end
